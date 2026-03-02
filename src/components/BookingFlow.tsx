@@ -6,6 +6,8 @@ import { DateTimeStep } from "./booking/DateTimeStep";
 import { ClientInfoStep } from "./booking/ClientInfoStep";
 import { ConfirmationStep } from "./booking/ConfirmationStep";
 import { Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const STEPS = ["Serviço", "Profissional", "Data/Hora", "Seus Dados", "Confirmação"];
 
@@ -16,9 +18,35 @@ export function BookingFlow() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [clientInfo, setClientInfo] = useState({ name: "", email: "", phone: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
+
+  const handleSubmit = async () => {
+    if (!selectedService || !selectedProfessional || !selectedDate || !selectedTime) return;
+    setSubmitting(true);
+    try {
+      const bookingDate = selectedDate.toISOString().split("T")[0];
+      const { error } = await supabase.from("bookings").insert({
+        client_name: clientInfo.name,
+        client_email: clientInfo.email,
+        client_phone: clientInfo.phone,
+        service_id: selectedService,
+        professional_id: selectedProfessional,
+        booking_date: bookingDate,
+        booking_time: selectedTime,
+        status: "pending",
+      });
+      if (error) throw error;
+      toast.success("Agendamento realizado com sucesso!");
+      next();
+    } catch (err) {
+      toast.error("Erro ao agendar. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <section id="agendar" className="py-20 px-6">
@@ -93,8 +121,9 @@ export function BookingFlow() {
                 <ClientInfoStep
                   info={clientInfo}
                   onChange={setClientInfo}
-                  onSubmit={next}
+                  onSubmit={handleSubmit}
                   onBack={prev}
+                  submitting={submitting}
                 />
               )}
               {step === 4 && (

@@ -1,6 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { generateTimeSlots } from "@/lib/scheduling";
 
 interface Props {
@@ -13,7 +15,25 @@ interface Props {
 
 export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelectTime, onBack }: Props) {
   const today = new Date();
-  const slots = selectedDate ? generateTimeSlots("09:00", "18:00", 30) : [];
+
+  const { data: availability = [] } = useQuery({
+    queryKey: ["availability"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("availability").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const disabledDays = availability.filter((a) => !a.enabled).map((a) => a.day_of_week);
+
+  const selectedDayAvail = selectedDate
+    ? availability.find((a) => a.day_of_week === selectedDate.getDay() && a.enabled)
+    : null;
+
+  const slots = selectedDayAvail
+    ? generateTimeSlots(selectedDayAvail.start_time, selectedDayAvail.end_time, 30)
+    : [];
 
   return (
     <div>
@@ -29,13 +49,15 @@ export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelec
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
-            disabled={(date) => date < today || date.getDay() === 0}
+            disabled={(date) => date < today || disabledDays.includes(date.getDay())}
             className="rounded-lg border"
           />
         </div>
         <div>
           {!selectedDate ? (
             <p className="text-muted-foreground text-center py-8">Selecione uma data</p>
+          ) : slots.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">Sem horários disponíveis neste dia</p>
           ) : (
             <div>
               <p className="text-sm font-medium mb-3 text-muted-foreground">

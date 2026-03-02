@@ -1,4 +1,5 @@
-import { MOCK_SERVICES, MOCK_PROFESSIONALS } from "@/lib/scheduling";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, Calendar, Clock, User, Mail, Phone } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -11,8 +12,25 @@ interface Props {
 }
 
 export function ConfirmationStep({ serviceId, professionalId, date, time, clientInfo }: Props) {
-  const service = MOCK_SERVICES.find((s) => s.id === serviceId);
-  const professional = MOCK_PROFESSIONALS.find((p) => p.id === professionalId);
+  const { data: service } = useQuery({
+    queryKey: ["service", serviceId],
+    queryFn: async () => {
+      if (!serviceId) return null;
+      const { data } = await supabase.from("services").select("*").eq("id", serviceId).single();
+      return data;
+    },
+    enabled: !!serviceId,
+  });
+
+  const { data: professional } = useQuery({
+    queryKey: ["professional", professionalId],
+    queryFn: async () => {
+      if (!professionalId) return null;
+      const { data } = await supabase.from("professionals").select("*").eq("id", professionalId).single();
+      return data;
+    },
+    enabled: !!professionalId,
+  });
 
   return (
     <div className="text-center">
@@ -26,14 +44,14 @@ export function ConfirmationStep({ serviceId, professionalId, date, time, client
       </motion.div>
       <h3 className="text-2xl font-bold mb-2">Agendamento confirmado!</h3>
       <p className="text-muted-foreground mb-8">
-        Um e-mail de confirmação será enviado e o evento será adicionado ao Google Agenda.
+        Sua reserva foi registrada com sucesso.
       </p>
       <div className="bg-secondary/50 rounded-lg p-6 text-left max-w-sm mx-auto space-y-3">
         {service && (
           <div className="flex items-center gap-3 text-sm">
             <Calendar className="w-4 h-4 text-primary shrink-0" />
             <span className="font-medium">{service.name}</span>
-            <span className="ml-auto font-bold text-primary">R$ {service.price.toFixed(2)}</span>
+            <span className="ml-auto font-bold text-primary">R$ {Number(service.price).toFixed(2)}</span>
           </div>
         )}
         {professional && (

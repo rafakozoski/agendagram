@@ -7,9 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_SERVICES, MOCK_PROFESSIONALS, DEFAULT_AVAILABILITY, type Service, type Availability } from "@/lib/scheduling";
-import { Plus, Trash2, Clock, Calendar, Users, Package, Settings } from "lucide-react";
+import { Plus, Trash2, Clock, Calendar, Users, Package, CalendarCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { BookingsTab } from "@/components/admin/BookingsTab";
 
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -58,8 +59,12 @@ export default function AdminPanel() {
           <p className="text-muted-foreground mb-8">Gerencie serviços, profissionais e disponibilidade</p>
         </motion.div>
 
-        <Tabs defaultValue="services" className="space-y-6">
+        <Tabs defaultValue="bookings" className="space-y-6">
           <TabsList className="bg-card border">
+            <TabsTrigger value="bookings" className="gap-2">
+              <CalendarCheck className="w-4 h-4" />
+              Agenda
+            </TabsTrigger>
             <TabsTrigger value="services" className="gap-2">
               <Package className="w-4 h-4" />
               Serviços
@@ -72,11 +77,11 @@ export default function AdminPanel() {
               <Clock className="w-4 h-4" />
               Disponibilidade
             </TabsTrigger>
-            <TabsTrigger value="integration" className="gap-2">
-              <Settings className="w-4 h-4" />
-              Integração
-            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="bookings">
+            <BookingsTab />
+          </TabsContent>
 
           <TabsContent value="services">
             <Card>
@@ -202,38 +207,6 @@ export default function AdminPanel() {
                     )}
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="integration">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Integração Google Agenda
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-accent/10 rounded-lg p-6 border border-accent/20">
-                  <h4 className="font-semibold mb-3">Como integrar com Google Agenda</h4>
-                  <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                    <li>Ative o Lovable Cloud para habilitar o backend</li>
-                    <li>Configure as credenciais OAuth do Google Cloud Console</li>
-                    <li>Os agendamentos serão automaticamente adicionados ao Google Calendar via API</li>
-                    <li>Os clientes receberão convites por e-mail com o evento</li>
-                  </ol>
-                </div>
-                <div className="bg-secondary rounded-lg p-6">
-                  <h4 className="font-semibold mb-2">Domínio próprio (SaaS)</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Para usar em domínio próprio, publique o projeto e conecte seu domínio nas configurações.
-                    Cada cliente do SaaS terá seu próprio subdomínio ou slug de agendamento.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Ex: <code className="bg-card px-2 py-0.5 rounded text-primary font-mono text-xs">seudominio.com/empresa</code>
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

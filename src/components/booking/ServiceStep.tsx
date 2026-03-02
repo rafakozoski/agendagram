@@ -1,5 +1,6 @@
-import { MOCK_SERVICES } from "@/lib/scheduling";
-import { Clock, Tag } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Clock, Tag, Loader2 } from "lucide-react";
 
 interface Props {
   selected: string | null;
@@ -7,11 +8,24 @@ interface Props {
 }
 
 export function ServiceStep({ selected, onSelect }: Props) {
+  const { data: services = [], isLoading } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("services").select("*").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
+
   return (
     <div>
       <h3 className="text-lg font-semibold mb-6">Escolha o serviço</h3>
       <div className="grid gap-3">
-        {MOCK_SERVICES.map((service) => (
+        {services.map((service) => (
           <button
             key={service.id}
             onClick={() => onSelect(service.id)}
@@ -36,7 +50,7 @@ export function ServiceStep({ selected, onSelect }: Props) {
               <div className="text-right shrink-0 ml-4">
                 <div className="flex items-center gap-1 text-primary font-bold">
                   <Tag className="w-3.5 h-3.5" />
-                  R$ {service.price.toFixed(2)}
+                  R$ {Number(service.price).toFixed(2)}
                 </div>
                 {service.duration > 0 && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">

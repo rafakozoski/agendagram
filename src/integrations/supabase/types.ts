@@ -14,7 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      availability: {
+        Row: {
+          day_of_week: number
+          enabled: boolean
+          end_time: string
+          id: string
+          start_time: string
+        }
+        Insert: {
+          day_of_week: number
+          enabled?: boolean
+          end_time?: string
+          id?: string
+          start_time?: string
+        }
+        Update: {
+          day_of_week?: number
+          enabled?: boolean
+          end_time?: string
+          id?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
+      bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          client_email: string
+          client_name: string
+          client_phone: string
+          created_at: string
+          id: string
+          professional_id: string | null
+          service_id: string | null
+          status: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          client_email: string
+          client_name: string
+          client_phone: string
+          created_at?: string
+          id?: string
+          professional_id?: string | null
+          service_id?: string | null
+          status?: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          client_email?: string
+          client_name?: string
+          client_phone?: string
+          created_at?: string
+          id?: string
+          professional_id?: string | null
+          service_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_services: {
+        Row: {
+          professional_id: string
+          service_id: string
+        }
+        Insert: {
+          professional_id: string
+          service_id: string
+        }
+        Update: {
+          professional_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_services_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professionals: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          name: string
+          role: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          role?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: number
+          id: string
+          name: string
+          price: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          name: string
+          price?: number
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          name?: string
+          price?: number
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

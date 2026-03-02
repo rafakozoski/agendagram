@@ -1,6 +1,7 @@
-import { MOCK_PROFESSIONALS } from "@/lib/scheduling";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, User } from "lucide-react";
+import { ArrowLeft, User, Loader2 } from "lucide-react";
 
 interface Props {
   serviceId: string | null;
@@ -10,9 +11,34 @@ interface Props {
 }
 
 export function ProfessionalStep({ serviceId, selected, onSelect, onBack }: Props) {
-  const available = MOCK_PROFESSIONALS.filter(
-    (p) => !serviceId || p.services.includes(serviceId)
-  );
+  const { data: professionals = [], isLoading } = useQuery({
+    queryKey: ["professionals", serviceId],
+    queryFn: async () => {
+      if (!serviceId) return [];
+      // Get professionals linked to this service
+      const { data: links, error: linkErr } = await supabase
+        .from("professional_services")
+        .select("professional_id")
+        .eq("service_id", serviceId);
+      if (linkErr) throw linkErr;
+
+      if (links.length === 0) {
+        // If no links, show all professionals
+        const { data, error } = await supabase.from("professionals").select("*").order("name");
+        if (error) throw error;
+        return data;
+      }
+
+      const ids = links.map((l) => l.professional_id);
+      const { data, error } = await supabase.from("professionals").select("*").in("id", ids).order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div>
@@ -23,10 +49,10 @@ export function ProfessionalStep({ serviceId, selected, onSelect, onBack }: Prop
         <h3 className="text-lg font-semibold">Escolha o profissional</h3>
       </div>
       <div className="grid gap-3">
-        {available.length === 0 && (
+        {professionals.length === 0 && (
           <p className="text-muted-foreground text-center py-8">Nenhum profissional disponível para este serviço.</p>
         )}
-        {available.map((pro) => (
+        {professionals.map((pro) => (
           <button
             key={pro.id}
             onClick={() => onSelect(pro.id)}

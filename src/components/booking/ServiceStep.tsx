@@ -5,13 +5,16 @@ import { Clock, Tag, Loader2 } from "lucide-react";
 interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
+  businessId?: string;
 }
 
-export function ServiceStep({ selected, onSelect }: Props) {
+export function ServiceStep({ selected, onSelect, businessId }: Props) {
   const { data: services = [], isLoading } = useQuery({
-    queryKey: ["services"],
+    queryKey: ["services", businessId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").order("name");
+      let query = supabase.from("services").select("*").order("name");
+      if (businessId) query = query.eq("business_id", businessId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },

@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       availability: {
         Row: {
+          business_id: string | null
           day_of_week: number
           enabled: boolean
           end_time: string
@@ -23,6 +24,7 @@ export type Database = {
           start_time: string
         }
         Insert: {
+          business_id?: string | null
           day_of_week: number
           enabled?: boolean
           end_time?: string
@@ -30,18 +32,28 @@ export type Database = {
           start_time?: string
         }
         Update: {
+          business_id?: string | null
           day_of_week?: number
           enabled?: boolean
           end_time?: string
           id?: string
           start_time?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "availability_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bookings: {
         Row: {
           booking_date: string
           booking_time: string
+          business_id: string | null
           client_email: string
           client_name: string
           client_phone: string
@@ -54,6 +66,7 @@ export type Database = {
         Insert: {
           booking_date: string
           booking_time: string
+          business_id?: string | null
           client_email: string
           client_name: string
           client_phone: string
@@ -66,6 +79,7 @@ export type Database = {
         Update: {
           booking_date?: string
           booking_time?: string
+          business_id?: string | null
           client_email?: string
           client_name?: string
           client_phone?: string
@@ -76,6 +90,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_professional_id_fkey"
             columns: ["professional_id"]
@@ -91,6 +112,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      businesses: {
+        Row: {
+          address: string | null
+          category: string
+          city: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          featured: boolean
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          slug: string
+        }
+        Insert: {
+          address?: string | null
+          category?: string
+          city?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          slug: string
+        }
+        Update: {
+          address?: string | null
+          category?: string
+          city?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          slug?: string
+        }
+        Relationships: []
       }
       professional_services: {
         Row: {
@@ -125,6 +191,7 @@ export type Database = {
       professionals: {
         Row: {
           avatar_url: string | null
+          business_id: string | null
           created_at: string
           id: string
           name: string
@@ -132,6 +199,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          business_id?: string | null
           created_at?: string
           id?: string
           name: string
@@ -139,15 +207,25 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          business_id?: string | null
           created_at?: string
           id?: string
           name?: string
           role?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "professionals_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
+          business_id: string | null
           created_at: string
           description: string | null
           duration: number
@@ -157,6 +235,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          business_id?: string | null
           created_at?: string
           description?: string | null
           duration?: number
@@ -166,6 +245,7 @@ export type Database = {
           type?: string
         }
         Update: {
+          business_id?: string | null
           created_at?: string
           description?: string | null
           duration?: number
@@ -174,7 +254,15 @@ export type Database = {
           price?: number
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

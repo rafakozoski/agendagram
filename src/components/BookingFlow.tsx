@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 const STEPS = ["Serviço", "Profissional", "Data/Hora", "Seus Dados", "Confirmação"];
 
-export function BookingFlow() {
+export function BookingFlow({ businessId }: { businessId?: string }) {
   const [step, setStep] = useState(0);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedProfessional, setSelectedProfessional] = useState<string | null>(null);
@@ -37,6 +37,7 @@ export function BookingFlow() {
         booking_date: bookingDate,
         booking_time: selectedTime,
         status: "pending",
+        business_id: businessId ?? null,
       });
       if (error) throw error;
       toast.success("Agendamento realizado com sucesso!");
@@ -98,7 +99,7 @@ export function BookingFlow() {
               transition={{ duration: 0.25 }}
             >
               {step === 0 && (
-                <ServiceStep selected={selectedService} onSelect={(id) => { setSelectedService(id); next(); }} />
+                <ServiceStep selected={selectedService} onSelect={(id) => { setSelectedService(id); next(); }} businessId={businessId} />
               )}
               {step === 1 && (
                 <ProfessionalStep
@@ -106,6 +107,7 @@ export function BookingFlow() {
                   selected={selectedProfessional}
                   onSelect={(id) => { setSelectedProfessional(id); next(); }}
                   onBack={prev}
+                  businessId={businessId}
                 />
               )}
               {step === 2 && (

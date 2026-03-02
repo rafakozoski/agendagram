@@ -8,9 +8,10 @@ interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
   onBack: () => void;
+  businessId?: string;
 }
 
-export function ProfessionalStep({ serviceId, selected, onSelect, onBack }: Props) {
+export function ProfessionalStep({ serviceId, selected, onSelect, onBack, businessId }: Props) {
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ["professionals", serviceId],
     queryFn: async () => {
@@ -23,8 +24,9 @@ export function ProfessionalStep({ serviceId, selected, onSelect, onBack }: Prop
       if (linkErr) throw linkErr;
 
       if (links.length === 0) {
-        // If no links, show all professionals
-        const { data, error } = await supabase.from("professionals").select("*").order("name");
+        let query = supabase.from("professionals").select("*").order("name");
+        if (businessId) query = query.eq("business_id", businessId);
+        const { data, error } = await query;
         if (error) throw error;
         return data;
       }

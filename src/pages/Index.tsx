@@ -9,17 +9,22 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const CATEGORIES = [
-  { id: "beleza", label: "Beleza", icon: Sparkles },
-  { id: "barbearia", label: "Barbearia", icon: Scissors },
-  { id: "saude", label: "Saúde", icon: Heart },
-  { id: "automotivo", label: "Automotivo", icon: Car },
-  { id: "pet", label: "Pet", icon: PawPrint },
-];
+const ICON_MAP: Record<string, any> = {
+  Sparkles, Scissors, Heart, Car, PawPrint,
+};
 
 export default function Index() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("*").eq("enabled", true).order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: businesses = [], isLoading } = useQuery({
     queryKey: ["businesses"],
@@ -83,18 +88,29 @@ export default function Index() {
       <section className="py-8 border-b bg-card">
         <div className="container mx-auto px-6">
           <div className="flex gap-3 overflow-x-auto pb-2 justify-center flex-wrap">
-            {CATEGORIES.map(({ id, label, icon: Icon }) => (
-              <Button
-                key={id}
-                variant={activeCategory === id ? "default" : "outline"}
-                size="sm"
-                className="rounded-full gap-2"
-                onClick={() => setActiveCategory(activeCategory === id ? null : id)}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-              </Button>
-            ))}
+            <Button
+              variant={activeCategory === null ? "default" : "outline"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setActiveCategory(null)}
+            >
+              Todos
+            </Button>
+            {categories.map((cat) => {
+              const Icon = ICON_MAP[cat.icon] || Sparkles;
+              return (
+                <Button
+                  key={cat.id}
+                  variant={activeCategory === cat.slug ? "default" : "outline"}
+                  size="sm"
+                  className="rounded-full gap-2"
+                  onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)}
+                >
+                  <Icon className="w-4 h-4" />
+                  {cat.name}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -110,7 +126,7 @@ export default function Index() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featured.map((b) => (
-                <BusinessCard key={b.id} business={b} featured />
+                <BusinessCard key={b.id} business={b} featured categories={categories} />
               ))}
             </div>
           </div>
@@ -122,7 +138,7 @@ export default function Index() {
         <div className="container mx-auto">
           <h2 className="text-2xl font-bold mb-6">
             {activeCategory
-              ? `Resultados em ${CATEGORIES.find((c) => c.id === activeCategory)?.label}`
+              ? `Resultados em ${categories.find((c) => c.slug === activeCategory)?.name || activeCategory}`
               : "Todos os estabelecimentos"}
           </h2>
           {isLoading ? (
@@ -134,7 +150,7 @@ export default function Index() {
           ) : regular.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {regular.map((b) => (
-                <BusinessCard key={b.id} business={b} />
+                <BusinessCard key={b.id} business={b} categories={categories} />
               ))}
             </div>
           ) : (
@@ -148,8 +164,8 @@ export default function Index() {
   );
 }
 
-function BusinessCard({ business, featured = false }: { business: any; featured?: boolean }) {
-  const categoryLabel = CATEGORIES.find((c) => c.id === business.category)?.label ?? business.category;
+function BusinessCard({ business, featured = false, categories = [] }: { business: any; featured?: boolean; categories?: any[] }) {
+  const categoryLabel = categories.find((c: any) => c.slug === business.category)?.name ?? business.category;
 
   return (
     <Link to={`/${business.slug}`}>
@@ -165,10 +181,10 @@ function BusinessCard({ business, featured = false }: { business: any; featured?
               <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
                 {business.name}
               </h3>
-              {business.city && (
+              {(business.city || business.neighborhood) && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   <MapPin className="w-3.5 h-3.5" />
-                  {business.city}
+                  {[business.neighborhood, business.city].filter(Boolean).join(", ")}
                 </p>
               )}
             </div>

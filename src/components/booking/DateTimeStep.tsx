@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { generateTimeSlots } from "@/lib/scheduling";
 
 interface Props {
@@ -11,18 +11,44 @@ interface Props {
   onSelectDate: (d: Date | undefined) => void;
   onSelectTime: (t: string) => void;
   onBack: () => void;
+  businessId?: string;
+  professionalId?: string | null;
 }
 
-export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelectTime, onBack }: Props) {
+export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelectTime, onBack, businessId, professionalId }: Props) {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const { data: availability = [] } = useQuery({
-    queryKey: ["availability"],
+    queryKey: ["availability", businessId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("availability").select("*");
+      let query = supabase.from("availability").select("*");
+      if (businessId) query = query.eq("business_id", businessId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
+  });
+
+  const dateStr = selectedDate ? selectedDate.toISOString().split("T")[0] : null;
+
+  // Fetch existing bookings for selected date to block taken slots
+  const { data: existingBookings = [] } = useQuery({
+    queryKey: ["date-bookings", dateStr, businessId, professionalId],
+    queryFn: async () => {
+      if (!dateStr) return [];
+      let query = supabase
+        .from("bookings")
+        .select("booking_time")
+        .eq("booking_date", dateStr)
+        .neq("status", "cancelled");
+      if (businessId) query = query.eq("business_id", businessId);
+      if (professionalId) query = query.eq("professional_id", professionalId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!dateStr,
   });
 
   const disabledDays = availability.filter((a) => !a.enabled).map((a) => a.day_of_week);
@@ -31,8 +57,10 @@ export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelec
     ? availability.find((a) => a.day_of_week === selectedDate.getDay() && a.enabled)
     : null;
 
+  const bookedTimes = existingBookings.map((b) => b.booking_time);
+
   const slots = selectedDayAvail
-    ? generateTimeSlots(selectedDayAvail.start_time, selectedDayAvail.end_time, 30)
+    ? generateTimeSlots(selectedDayAvail.start_time, selectedDayAvail.end_time, 30, bookedTimes)
     : [];
 
   return (
@@ -49,7 +77,11 @@ export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelec
             mode="single"
             selected={selectedDate}
             onSelect={onSelectDate}
-            disabled={(date) => date < today || disabledDays.includes(date.getDay())}
+            disabled={(date) => {
+              const d = new Date(date);
+              d.setHours(0, 0, 0, 0);
+              return d < today || disabledDays.includes(date.getDay());
+            }}
             className="rounded-lg border"
           />
         </div>
@@ -61,7 +93,7 @@ export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelec
           ) : (
             <div>
               <p className="text-sm font-medium mb-3 text-muted-foreground">
-                Horários disponíveis para {selectedDate.toLocaleDateString('pt-BR')}
+                Horários para {selectedDate.toLocaleDateString('pt-BR')}
               </p>
               <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1">
                 {slots.map((slot) => (
@@ -71,7 +103,7 @@ export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelec
                     onClick={() => onSelectTime(slot.time)}
                     className={`py-2 px-3 rounded-md text-sm font-medium transition-all ${
                       !slot.available
-                        ? "bg-muted text-muted-foreground/40 cursor-not-allowed"
+                        ? "bg-muted text-muted-foreground/40 cursor-not-allowed line-through"
                         : selectedTime === slot.time
                         ? "gradient-primary text-primary-foreground shadow-glow"
                         : "bg-secondary text-secondary-foreground hover:bg-primary/10 hover:text-primary"

@@ -174,7 +174,18 @@ function BusinessCard({ business, featured = false, categories = [] }: { busines
           featured ? "border-accent/40 shadow-md" : ""
         }`}
       >
-        <div className={`h-2 w-full ${featured ? "gradient-accent" : "gradient-primary"}`} />
+        {/* Banner for featured */}
+        {featured && business.cover_url ? (
+          <div className="h-36 w-full overflow-hidden">
+            <img src={business.cover_url} alt={business.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          </div>
+        ) : featured ? (
+          <div className="h-36 w-full gradient-accent flex items-center justify-center">
+            <Star className="w-10 h-10 text-accent-foreground/40" />
+          </div>
+        ) : (
+          <div className={`h-2 w-full gradient-primary`} />
+        )}
         <CardContent className="p-5">
           <div className="flex items-start justify-between mb-3">
             <div>

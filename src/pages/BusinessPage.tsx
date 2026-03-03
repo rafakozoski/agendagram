@@ -48,9 +48,14 @@ export default function BusinessPage() {
     );
   }
 
+  const locationParts = [
+    (business as any).neighborhood,
+    business.city,
+    business.address,
+  ].filter(Boolean);
+
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <section className="gradient-hero py-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-primary blur-3xl" />
@@ -63,10 +68,9 @@ export default function BusinessPage() {
             {business.name}
           </h1>
           <div className="flex flex-wrap gap-4 mt-3 text-primary-foreground/70 text-sm">
-            {business.city && (
+            {locationParts.length > 0 && (
               <span className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" /> {business.city}
-                {business.address && ` — ${business.address}`}
+                <MapPin className="w-4 h-4" /> {locationParts.join(" — ")}
               </span>
             )}
             {business.phone && (
@@ -81,7 +85,6 @@ export default function BusinessPage() {
         </div>
       </section>
 
-      {/* Booking Flow filtered by business */}
       <BookingFlow businessId={business.id} />
     </div>
   );

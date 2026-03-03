@@ -28,6 +28,23 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
     setSubmitting(true);
     try {
       const bookingDate = selectedDate.toISOString().split("T")[0];
+      
+      // Check if slot is still available
+      const { data: existing } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("booking_date", bookingDate)
+        .eq("booking_time", selectedTime)
+        .eq("professional_id", selectedProfessional)
+        .neq("status", "cancelled")
+        .maybeSingle();
+      
+      if (existing) {
+        toast.error("Este horário já foi reservado. Escolha outro.");
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase.from("bookings").insert({
         client_name: clientInfo.name,
         client_email: clientInfo.email,
@@ -117,6 +134,8 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
                   onSelectDate={setSelectedDate}
                   onSelectTime={(t) => { setSelectedTime(t); next(); }}
                   onBack={prev}
+                  businessId={businessId}
+                  professionalId={selectedProfessional}
                 />
               )}
               {step === 3 && (

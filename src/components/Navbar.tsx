@@ -20,16 +20,10 @@ export function Navbar() {
           <span className="font-bold text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Reservagram</span>
         </Link>
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/">
-            <Button variant={!isAdmin ? "default" : "ghost"} size="sm">
-              <Calendar className="w-4 h-4 mr-2" />
-              Agendar
-            </Button>
-          </Link>
-          {user ? (
+          {isAdmin && user && (
             <>
               <Link to="/admin">
-                <Button variant={isAdmin ? "default" : "ghost"} size="sm">
+                <Button variant="default" size="sm">
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Painel
                 </Button>
@@ -39,11 +33,12 @@ export function Navbar() {
                 Sair
               </Button>
             </>
-          ) : (
-            <Link to="/auth">
+          )}
+          {!isAdmin && (
+            <Link to="/">
               <Button variant="ghost" size="sm">
-                <LogIn className="w-4 h-4 mr-2" />
-                Entrar
+                <Calendar className="w-4 h-4 mr-2" />
+                Início
               </Button>
             </Link>
           )}
@@ -55,21 +50,12 @@ export function Navbar() {
       {open && (
         <div className="md:hidden border-t bg-card px-6 py-4 space-y-2">
           <Link to="/" onClick={() => setOpen(false)}>
-            <Button variant="ghost" className="w-full justify-start">Agendar</Button>
+            <Button variant="ghost" className="w-full justify-start">Início</Button>
           </Link>
-          {user ? (
-            <>
-              <Link to="/admin" onClick={() => setOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">Painel</Button>
-              </Link>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); setOpen(false); }}>
-                Sair
-              </Button>
-            </>
-          ) : (
-            <Link to="/auth" onClick={() => setOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">Entrar</Button>
-            </Link>
+          {isAdmin && user && (
+            <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); setOpen(false); }}>
+              Sair
+            </Button>
           )}
         </div>
       )}

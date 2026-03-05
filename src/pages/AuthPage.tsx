@@ -27,13 +27,18 @@ export default function AuthPage() {
         toast.success("Login realizado com sucesso!");
         navigate("/admin");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Cadastro realizado! Verifique seu e-mail para confirmar.");
+        if (signUpData.session) {
+          toast.success("Cadastro realizado! Redirecionando...");
+          navigate("/admin");
+        } else {
+          toast.success("Cadastro realizado! Verifique seu e-mail para confirmar.");
+        }
       }
     } catch (error: any) {
       toast.error(error.message || "Erro ao autenticar");

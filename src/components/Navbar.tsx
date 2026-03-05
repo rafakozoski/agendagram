@@ -35,12 +35,19 @@ export function Navbar() {
             </>
           )}
           {!isAdmin && (
-            <Link to="/">
-              <Button variant="ghost" size="sm">
-                <Calendar className="w-4 h-4 mr-2" />
-                Início
-              </Button>
-            </Link>
+            <>
+              <Link to="/">
+                <Button variant="ghost" size="sm">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Início
+                </Button>
+              </Link>
+              <Link to="/pricing">
+                <Button variant="ghost" size="sm">
+                  Planos
+                </Button>
+              </Link>
+            </>
           )}
         </div>
         <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(!open)}>

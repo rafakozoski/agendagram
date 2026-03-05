@@ -10,6 +10,7 @@ import BusinessPage from "./pages/BusinessPage";
 import AdminPanel from "./pages/AdminPanel";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
+import PricingPage from "./pages/PricingPage";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
         <Navbar />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/admin/login" element={<AuthPage />} />
           <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
           <Route path="/:slug" element={<BusinessPage />} />

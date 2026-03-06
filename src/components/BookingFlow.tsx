@@ -28,8 +28,8 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
     setSubmitting(true);
     try {
       const bookingDate = selectedDate.toISOString().split("T")[0];
-      
-      // Check if slot is still available
+
+      // Verifica se horário ainda está disponível
       const { data: existing } = await supabase
         .from("bookings")
         .select("id")
@@ -38,13 +38,14 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
         .eq("professional_id", selectedProfessional)
         .neq("status", "cancelled")
         .maybeSingle();
-      
+
       if (existing) {
         toast.error("Este horário já foi reservado. Escolha outro.");
         setSubmitting(false);
         return;
       }
 
+      // Insere o agendamento
       const { error } = await supabase.from("bookings").insert({
         client_name: clientInfo.name,
         client_email: clientInfo.email,
@@ -57,7 +58,33 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
         business_id: businessId ?? null,
       });
       if (error) throw error;
-      toast.success("Agendamento realizado com sucesso!");
+
+      // Busca dados para o email
+      const [{ data: serviceData }, { data: professionalData }, { data: businessData }] = await Promise.all([
+        supabase.from("services").select("name, price").eq("id", selectedService).single(),
+        supabase.from("professionals").select("name").eq("id", selectedProfessional).single(),
+        businessId
+          ? supabase.from("businesses").select("name").eq("id", businessId).single()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      // Dispara email de confirmação (sem bloquear o fluxo se falhar)
+      supabase.functions
+        .invoke("send-booking-email", {
+          body: {
+            client_name: clientInfo.name,
+            client_email: clientInfo.email,
+            service_name: serviceData?.name,
+            professional_name: professionalData?.name,
+            booking_date: bookingDate,
+            booking_time: selectedTime,
+            business_name: (businessData as any)?.name,
+            price: serviceData?.price,
+          },
+        })
+        .catch((err) => console.warn("Email não enviado:", err));
+
+      toast.success("Agendamento realizado! Verifique seu e-mail.");
       next();
     } catch (err) {
       toast.error("Erro ao agendar. Tente novamente.");
@@ -116,7 +143,11 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
               transition={{ duration: 0.25 }}
             >
               {step === 0 && (
-                <ServiceStep selected={selectedService} onSelect={(id) => { setSelectedService(id); next(); }} businessId={businessId} />
+                <ServiceStep
+                  selected={selectedService}
+                  onSelect={(id) => { setSelectedService(id); next(); }}
+                  businessId={businessId}
+                />
               )}
               {step === 1 && (
                 <ProfessionalStep

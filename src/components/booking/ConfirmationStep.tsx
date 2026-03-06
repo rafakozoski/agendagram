@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Calendar, Clock, User, Mail, Phone } from "lucide-react";
+import { CheckCircle, Calendar, Clock, User, Mail, Phone, Download, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface Props {
   serviceId: string | null;
@@ -12,6 +15,8 @@ interface Props {
 }
 
 export function ConfirmationStep({ serviceId, professionalId, date, time, clientInfo }: Props) {
+  const receiptRef = useRef<HTMLDivElement>(null);
+
   const { data: service } = useQuery({
     queryKey: ["service", serviceId],
     queryFn: async () => {
@@ -32,6 +37,61 @@ export function ConfirmationStep({ serviceId, professionalId, date, time, client
     enabled: !!professionalId,
   });
 
+  const generateImage = async (): Promise<Blob | null> => {
+    // Dynamically import html2canvas only when needed
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      if (!receiptRef.current) return null;
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: "#0f172a",
+        scale: 2,
+        useCORS: true,
+      });
+      return await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    } catch {
+      toast.error("Erro ao gerar imagem. Instale html2canvas: npm i html2canvas");
+      return null;
+    }
+  };
+
+  const handleDownload = async () => {
+    const blob = await generateImage();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `comprovante-agendamento-${Date.now()}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Comprovante salvo!");
+  };
+
+  const handleShare = async () => {
+    const blob = await generateImage();
+    if (!blob) return;
+    const file = new File([blob], "comprovante-agendamento.png", { type: "image/png" });
+
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: "Comprovante de Agendamento",
+          text: `Agendamento confirmado para ${clientInfo.name}`,
+          files: [file],
+        });
+      } catch {
+        // user cancelled share
+      }
+    } else {
+      // Fallback: download
+      handleDownload();
+      toast.info("Compartilhamento não suportado neste dispositivo. Imagem salva.");
+    }
+  };
+
+  const formattedDate = date
+    ? date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })
+    : "";
+
   return (
     <div className="text-center">
       <motion.div
@@ -42,44 +102,82 @@ export function ConfirmationStep({ serviceId, professionalId, date, time, client
       >
         <CheckCircle className="w-10 h-10 text-primary-foreground" />
       </motion.div>
+
       <h3 className="text-2xl font-bold mb-2">Agendamento confirmado!</h3>
-      <p className="text-muted-foreground mb-8">
-        Sua reserva foi registrada com sucesso.
+      <p className="text-muted-foreground mb-6">
+        Um e-mail de confirmação foi enviado para <strong>{clientInfo.email}</strong>
       </p>
-      <div className="bg-secondary/50 rounded-lg p-6 text-left max-w-sm mx-auto space-y-3">
+
+      {/* Receipt card — this is what gets captured as image */}
+      <div
+        ref={receiptRef}
+        className="bg-slate-900 rounded-xl p-6 text-left max-w-sm mx-auto space-y-3 border border-slate-700"
+        style={{ fontFamily: "system-ui, sans-serif" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-white font-bold text-lg">Comprovante</span>
+          <span className="text-emerald-400 text-xs font-semibold uppercase tracking-wider bg-emerald-400/10 px-2 py-1 rounded-full">
+            ✓ Confirmado
+          </span>
+        </div>
+
         {service && (
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3 text-sm text-slate-200">
             <Calendar className="w-4 h-4 text-primary shrink-0" />
             <span className="font-medium">{service.name}</span>
             <span className="ml-auto font-bold text-primary">R$ {Number(service.price).toFixed(2)}</span>
           </div>
         )}
         {professional && (
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3 text-sm text-slate-200">
             <User className="w-4 h-4 text-primary shrink-0" />
             <span>{professional.name}</span>
           </div>
         )}
         {date && time && (
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3 text-sm text-slate-200">
             <Clock className="w-4 h-4 text-primary shrink-0" />
-            <span>{date.toLocaleDateString('pt-BR')} às {time}</span>
+            <span className="capitalize">{formattedDate} às {time}</span>
           </div>
         )}
-        <hr className="border-border" />
-        <div className="flex items-center gap-3 text-sm">
-          <User className="w-4 h-4 text-muted-foreground shrink-0" />
+
+        <hr className="border-slate-700 my-3" />
+
+        <div className="flex items-center gap-3 text-sm text-slate-300">
+          <User className="w-4 h-4 text-slate-400 shrink-0" />
           <span>{clientInfo.name}</span>
         </div>
-        <div className="flex items-center gap-3 text-sm">
-          <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="flex items-center gap-3 text-sm text-slate-300">
+          <Mail className="w-4 h-4 text-slate-400 shrink-0" />
           <span>{clientInfo.email}</span>
         </div>
-        <div className="flex items-center gap-3 text-sm">
-          <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-          <span>{clientInfo.phone}</span>
+        {clientInfo.phone && (
+          <div className="flex items-center gap-3 text-sm text-slate-300">
+            <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+            <span>{clientInfo.phone}</span>
+          </div>
+        )}
+
+        <div className="pt-3 text-center text-xs text-slate-500">
+          Gerado em {new Date().toLocaleDateString("pt-BR")} • Reservagram
         </div>
       </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-3 justify-center mt-6">
+        <Button variant="outline" className="gap-2" onClick={handleDownload}>
+          <Download className="w-4 h-4" />
+          Salvar imagem
+        </Button>
+        <Button className="gap-2 gradient-primary text-primary-foreground" onClick={handleShare}>
+          <Share2 className="w-4 h-4" />
+          Compartilhar
+        </Button>
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-4">
+        Guarde este comprovante. Você também receberá um e-mail de confirmação.
+      </p>
     </div>
   );
 }

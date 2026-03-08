@@ -110,7 +110,7 @@ export function AdminSettingsTab() {
     onError: (err: any) => toast.error(err.message),
   });
 
-
+  const addCategory = useMutation({
     mutationFn: async (name: string) => {
       const slug = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
       const { error } = await supabase.from("categories").insert({ name, slug, sort_order: categories.length + 1 });

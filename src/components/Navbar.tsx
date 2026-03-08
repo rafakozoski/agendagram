@@ -74,10 +74,29 @@ export function Navbar() {
           <Link to="/" onClick={() => setOpen(false)}>
             <Button variant="ghost" className="w-full justify-start">Início</Button>
           </Link>
-          {isAdmin && user && (
-            <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); setOpen(false); }}>
-              Sair
-            </Button>
+          <Link to="/pricing" onClick={() => setOpen(false)}>
+            <Button variant="ghost" className="w-full justify-start">Planos</Button>
+          </Link>
+          {user ? (
+            <>
+              <Link to="/admin" onClick={() => setOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start">
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Painel
+                </Button>
+              </Link>
+              <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); setOpen(false); }}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </>
+          ) : (
+            <Link to="/admin/login" onClick={() => setOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start">
+                <LogIn className="w-4 h-4 mr-2" />
+                Entrar
+              </Button>
+            </Link>
           )}
         </div>
       )}

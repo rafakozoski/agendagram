@@ -47,6 +47,21 @@ export function Navbar() {
                   Planos
                 </Button>
               </Link>
+              {user ? (
+                <Link to="/admin">
+                  <Button variant="default" size="sm" className="gradient-primary text-primary-foreground">
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Painel
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/admin/login">
+                  <Button variant="default" size="sm" className="gradient-primary text-primary-foreground">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Entrar
+                  </Button>
+                </Link>
+              )}
             </>
           )}
         </div>

@@ -86,7 +86,31 @@ export function AdminSettingsTab() {
     onError: (err: any) => toast.error(err.message),
   });
 
-  const addCategory = useMutation({
+  const createBusiness = useMutation({
+    mutationFn: async (form: typeof emptyBizForm) => {
+      if (!form.name.trim() || !form.slug.trim()) throw new Error("Nome e slug são obrigatórios");
+      const { error } = await supabase.from("businesses").insert({
+        name: form.name.trim(),
+        slug: form.slug.trim(),
+        category: form.category,
+        city: form.city,
+        neighborhood: form.neighborhood,
+        phone: form.phone,
+        description: form.description,
+        owner_id: user?.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
+      setShowNewBiz(false);
+      setBizForm(emptyBizForm);
+      toast.success("Empresa criada com sucesso!");
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+
     mutationFn: async (name: string) => {
       const slug = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
       const { error } = await supabase.from("categories").insert({ name, slug, sort_order: categories.length + 1 });

@@ -182,9 +182,9 @@ function BusinessCard({ business, featured = false, categories = [] }: { busines
           featured ? "border-accent/40 shadow-md" : ""
         }`}
       >
-        {/* Banner for featured */}
-        {featured && business.cover_url ? (
-          <div className="h-36 w-full overflow-hidden">
+        {/* Banner */}
+        {business.cover_url ? (
+          <div className={`${featured ? "h-36" : "h-28"} w-full overflow-hidden`}>
             <img src={business.cover_url} alt={business.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           </div>
         ) : featured ? (

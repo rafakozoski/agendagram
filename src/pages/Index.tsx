@@ -42,7 +42,8 @@ export default function Index() {
     const matchSearch =
       !search ||
       b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.city?.toLowerCase().includes(search.toLowerCase());
+      b.city?.toLowerCase().includes(search.toLowerCase()) ||
+      b.neighborhood?.toLowerCase().includes(search.toLowerCase());
     const matchCategory = !activeCategory || b.category === activeCategory;
     return matchSearch && matchCategory;
   });
@@ -81,7 +82,7 @@ export default function Index() {
             <div className="relative max-w-lg mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
-                placeholder="Busque por nome ou cidade..."
+                placeholder="Busque por nome, cidade ou bairro..."
                 className="pl-12 h-14 text-base rounded-full bg-card border-0 shadow-lg"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

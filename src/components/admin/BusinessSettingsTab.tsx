@@ -54,7 +54,7 @@ export function BusinessSettingsTab() {
   const [form, setForm] = useState({
     name: "", slug: "", description: "", category: "beleza",
     state: "", city: "", neighborhood: "", address: "", phone: "",
-    banner_url: "",
+    cover_url: "",
   });
   const [bannerPreview, setBannerPreview] = useState<string>("");
   const [uploadingBanner, setUploadingBanner] = useState(false);
@@ -62,7 +62,7 @@ export function BusinessSettingsTab() {
   useEffect(() => {
     if (business) {
       const b = business as any;
-      const stateKey = Object.keys(ESTADOS).find(k => ESTADOS[k].nome === b.state) || b.state || "";
+      const stateKey = Object.keys(ESTADOS).find(k => ESTADOS[k].nome === (b as any).state) || (b as any).state || "";
       setForm({
         name: b.name || "",
         slug: b.slug || "",
@@ -73,9 +73,9 @@ export function BusinessSettingsTab() {
         neighborhood: b.neighborhood || "",
         address: b.address || "",
         phone: b.phone || "",
-        banner_url: b.banner_url || "",
+        cover_url: b.cover_url || "",
       });
-      if (b.banner_url) setBannerPreview(b.banner_url);
+      if (b.cover_url) setBannerPreview(b.cover_url);
     }
   }, [business]);
 
@@ -98,7 +98,7 @@ export function BusinessSettingsTab() {
       const { error: upErr } = await supabase.storage.from("business-assets").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("business-assets").getPublicUrl(path);
-      setForm((f) => ({ ...f, banner_url: data.publicUrl }));
+      setForm((f) => ({ ...f, cover_url: data.publicUrl }));
       setBannerPreview(data.publicUrl);
       toast.success("Banner carregado!");
     } catch (err: any) {
@@ -109,7 +109,7 @@ export function BusinessSettingsTab() {
   };
 
   const removeBanner = () => {
-    setForm((f) => ({ ...f, banner_url: "" }));
+    setForm((f) => ({ ...f, cover_url: "" }));
     setBannerPreview("");
   };
 

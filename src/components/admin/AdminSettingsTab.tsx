@@ -90,7 +90,7 @@ export function AdminSettingsTab() {
   });
 
   const createBusiness = useMutation({
-    mutationFn: async (form: typeof emptyBizForm) => {
+    mutationFn: async ({ form, ownerId }: { form: typeof emptyBizForm; ownerId?: string }) => {
       if (!form.name.trim() || !form.slug.trim()) throw new Error("Nome e slug são obrigatórios");
       const { error } = await supabase.from("businesses").insert({
         name: form.name.trim(),
@@ -100,7 +100,7 @@ export function AdminSettingsTab() {
         neighborhood: form.neighborhood,
         phone: form.phone,
         description: form.description,
-        owner_id: user?.id,
+        owner_id: ownerId || user?.id,
       });
       if (error) throw error;
     },
@@ -108,6 +108,8 @@ export function AdminSettingsTab() {
       queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
       setShowNewBiz(false);
       setBizForm(emptyBizForm);
+      setOwnerLookup(null);
+      setOwnerLookupError("");
       toast.success("Empresa criada com sucesso!");
     },
     onError: (err: any) => toast.error(err.message),

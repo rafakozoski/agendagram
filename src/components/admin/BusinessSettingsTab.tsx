@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X, UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", 
 
 export function BusinessSettingsTab() {
   const { user } = useAuth();
-  const { business, isLoading: bizLoading, refetch: refetchBiz } = useMyBusiness();
+  const { business, isLoading: bizLoading, refetch: refetchBiz, ownedBusinesses } = useMyBusiness();
   const queryClient = useQueryClient();
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,6 +165,9 @@ export function BusinessSettingsTab() {
         if (error) throw error;
         await seedAvailability(business.id);
       } else {
+        if (ownedBusinesses.length >= 1) {
+          throw new Error("Você já possui um estabelecimento cadastrado. Não é permitido criar mais de um.");
+        }
         const { data: newBiz, error } = await supabase
           .from("businesses")
           .insert({ ...payload, owner_id: user!.id })
@@ -182,6 +186,31 @@ export function BusinessSettingsTab() {
       toast.success(business ? "Dados atualizados!" : "Empresa criada!");
     },
     onError: (err: any) => toast.error(err.message),
+  });
+
+  const deleteBusiness = useMutation({
+    mutationFn: async () => {
+      if (!business) return;
+      // Delete related data first
+      await supabase.from("availability").delete().eq("business_id", business.id);
+      await supabase.from("professional_services").delete().in(
+        "professional_id",
+        (await supabase.from("professionals").select("id").eq("business_id", business.id)).data?.map((p: any) => p.id) || []
+      );
+      await supabase.from("bookings").delete().eq("business_id", business.id);
+      await supabase.from("services").delete().eq("business_id", business.id);
+      await supabase.from("professionals").delete().eq("business_id", business.id);
+      await supabase.from("subscriptions").delete().eq("business_id", business.id);
+      const { error } = await supabase.from("businesses").delete().eq("id", business.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      localStorage.removeItem("selectedBusinessId");
+      queryClient.invalidateQueries({ queryKey: ["my-businesses"] });
+      refetchBiz();
+      toast.success("Empresa excluída com sucesso");
+    },
+    onError: (err: any) => toast.error("Erro ao excluir: " + err.message),
   });
 
   const addService = useMutation({
@@ -396,10 +425,41 @@ export function BusinessSettingsTab() {
             </div>
           </div>
 
-          <Button onClick={() => saveBusiness.mutate()} className="gradient-primary text-primary-foreground">
-            {saveBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            {business ? "Salvar alterações" : "Criar empresa"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={() => saveBusiness.mutate()} className="gradient-primary text-primary-foreground">
+              {saveBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              {business ? "Salvar alterações" : "Criar empresa"}
+            </Button>
+
+            {business && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir empresa
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação é irreversível. Todos os dados da empresa serão excluídos permanentemente, incluindo serviços, profissionais, agendamentos e horários.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteBusiness.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deleteBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Excluir permanentemente
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </CardContent>
       </Card>
 

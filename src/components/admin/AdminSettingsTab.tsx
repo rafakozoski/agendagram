@@ -221,14 +221,22 @@ export function AdminSettingsTab() {
           {categories.map((cat) => (
             <div key={cat.id} className="flex items-center gap-3 p-3 rounded-lg border">
               <Switch
-                checked={cat.enabled}
+                checked={cat.enabled ?? true}
                 onCheckedChange={(enabled) => toggleCategory.mutate({ id: cat.id, enabled })}
               />
               <span className={`font-medium flex-1 ${!cat.enabled ? "text-muted-foreground line-through" : ""}`}>
                 {cat.name}
               </span>
               <Badge variant="outline" className="text-xs">{cat.slug}</Badge>
-              <Button variant="ghost" size="icon" onClick={() => deleteCategory.mutate(cat.id)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => { setEditCat(cat); setCatForm({ name: cat.name, slug: cat.slug }); }}
+                title="Editar"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => deleteCategory.mutate(cat.id)} title="Remover">
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>
             </div>

@@ -157,7 +157,7 @@ export function BusinessSettingsTab() {
     mutationFn: async () => {
       const payload = {
         ...form,
-        state: form.state ? ESTADOS[form.state]?.nome : form.state,
+        state: form.state ? (dbStates.find(s => s.code === form.state)?.name || form.state) : form.state,
       };
       if (business) {
         const { error } = await supabase.from("businesses").update(payload).eq("id", business.id);

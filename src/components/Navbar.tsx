@@ -98,12 +98,20 @@ export function Navbar() {
           </Link>
           {user ? (
             <>
-              <Link to="/admin" onClick={() => setOpen(false)}>
+              <Link to={panelLink} onClick={() => setOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start">
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Painel
                 </Button>
               </Link>
+              {isAdmin && (
+                <Link to="/admin" onClick={() => setOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); setOpen(false); }}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair

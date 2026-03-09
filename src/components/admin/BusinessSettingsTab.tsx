@@ -422,10 +422,41 @@ export function BusinessSettingsTab() {
             </div>
           </div>
 
-          <Button onClick={() => saveBusiness.mutate()} className="gradient-primary text-primary-foreground">
-            {saveBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            {business ? "Salvar alterações" : "Criar empresa"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={() => saveBusiness.mutate()} className="gradient-primary text-primary-foreground">
+              {saveBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              {business ? "Salvar alterações" : "Criar empresa"}
+            </Button>
+
+            {business && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir empresa
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação é irreversível. Todos os dados da empresa serão excluídos permanentemente, incluindo serviços, profissionais, agendamentos e horários.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteBusiness.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deleteBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Excluir permanentemente
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </CardContent>
       </Card>
 

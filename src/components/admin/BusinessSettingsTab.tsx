@@ -350,7 +350,7 @@ export function BusinessSettingsTab() {
               <Select
                 value={form.city}
                 onValueChange={(v) => {
-                  const stateKey = findStateByCity(v);
+                  const stateKey = dbFindState(v);
                   setForm({ ...form, city: v, neighborhood: "", state: stateKey || form.state });
                 }}
               >

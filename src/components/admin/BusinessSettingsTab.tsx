@@ -436,34 +436,14 @@ export function BusinessSettingsTab() {
           </Card>
 
           {/* Professionals */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" />Profissionais</CardTitle>
-              <Button onClick={() => addProfessional.mutate()} size="sm" className="gradient-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-1" /> Adicionar
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {professionals.map((pro) => (
-                <div key={pro.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-lg border items-end">
-                  <div>
-                    <Label>Nome</Label>
-                    <Input defaultValue={pro.name} onBlur={(e) => updateProfessional.mutate({ id: pro.id, updates: { name: e.target.value } })} />
-                  </div>
-                  <div>
-                    <Label>Função</Label>
-                    <Input defaultValue={pro.role} onBlur={(e) => updateProfessional.mutate({ id: pro.id, updates: { role: e.target.value } })} />
-                  </div>
-                  <div className="flex justify-end">
-                    <Button variant="ghost" size="icon" onClick={() => deleteProfessional.mutate(pro.id)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {professionals.length === 0 && <p className="text-muted-foreground text-center py-4">Nenhum profissional cadastrado.</p>}
-            </CardContent>
-          </Card>
+          <ProfessionalsSection
+            business={business}
+            professionals={professionals}
+            addProfessional={addProfessional}
+            updateProfessional={updateProfessional}
+            deleteProfessional={deleteProfessional}
+            queryClient={queryClient}
+          />
 
           {/* Availability */}
           <Card>

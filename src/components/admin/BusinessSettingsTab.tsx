@@ -35,7 +35,7 @@ export function BusinessSettingsTab() {
   useEffect(() => {
     if (business) {
       const b = business as any;
-      const stateKey = Object.keys(ESTADOS).find(k => ESTADOS[k].nome === (b as any).state) || (b as any).state || "";
+      const stateKey = dbStates.find(s => s.name === b.state)?.code || b.state || "";
       setForm({
         name: b.name || "",
         slug: b.slug || "",

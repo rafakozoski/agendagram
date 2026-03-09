@@ -71,7 +71,7 @@ export function UsersTab() {
 
       queryClient.invalidateQueries({ queryKey: ["all-user-roles"] });
       setShowNewUser(false);
-      setUserForm({ email: "", password: "", role: "owner" });
+      setUserForm({ email: "", password: "", role: "owner", plan: "none" });
       toast.success("Usuário criado com sucesso!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao criar usuário");

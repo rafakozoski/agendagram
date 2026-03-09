@@ -85,13 +85,6 @@ export default function Index() {
             <p className="text-lg text-primary-foreground/70 mb-8">
               Descubra os melhores profissionais perto de você e reserve online com o <strong>Reservagram</strong>.
             </p>
-            <div className="flex justify-center gap-3 mb-8">
-              <Link to="/pricing">
-                <Button size="lg" variant="secondary" className="rounded-full font-semibold">
-                  Cadastre seu negócio
-                </Button>
-              </Link>
-            </div>
             <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />

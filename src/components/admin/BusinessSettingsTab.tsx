@@ -162,12 +162,14 @@ export function BusinessSettingsTab() {
       if (business) {
         const { error } = await supabase.from("businesses").update(payload).eq("id", business.id);
         if (error) throw error;
-        // Seed availability if missing for existing business
         await seedAvailability(business.id);
       } else {
-        const { error } = await supabase.from("businesses").insert({ ...payload, owner_id: user!.id });
+        const { data: newBiz, error } = await supabase
+          .from("businesses")
+          .insert({ ...payload, owner_id: user!.id })
+          .select("id")
+          .single();
         if (error) throw error;
-        const { data: newBiz } = await supabase.from("businesses").select("id").eq("owner_id", user!.id).single();
         if (newBiz) {
           await seedAvailability(newBiz.id);
         }
@@ -176,6 +178,7 @@ export function BusinessSettingsTab() {
     onSuccess: () => {
       refetchBiz();
       queryClient.invalidateQueries({ queryKey: ["biz-availability"] });
+      queryClient.invalidateQueries({ queryKey: ["my-businesses"] });
       toast.success(business ? "Dados atualizados!" : "Empresa criada!");
     },
     onError: (err: any) => toast.error(err.message),

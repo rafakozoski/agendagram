@@ -49,6 +49,36 @@ export type Database = {
           },
         ]
       }
+      banners: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          image_url: string
+          link_url: string | null
+          position: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          image_url: string
+          link_url?: string | null
+          position?: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          image_url?: string
+          link_url?: string | null
+          position?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_date: string

@@ -16,6 +16,12 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const resolvePanel = async () => {
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? "");
+    const roles = data?.map((r) => r.role) ?? [];
+    return roles.includes("admin") ? "/admin" : "/painel";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -25,7 +31,8 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Login realizado com sucesso!");
-        navigate("/admin");
+        const dest = await resolvePanel();
+        navigate(dest);
       } else {
         const { data: signUpData, error } = await supabase.auth.signUp({
           email,
@@ -35,7 +42,8 @@ export default function AuthPage() {
         if (error) throw error;
         if (signUpData.session) {
           toast.success("Cadastro realizado! Redirecionando...");
-          navigate("/admin");
+          const dest = await resolvePanel();
+          navigate(dest);
         } else {
           toast.success("Cadastro realizado! Verifique seu e-mail para confirmar.");
         }

@@ -106,6 +106,19 @@ export function BusinessesTab() {
         owner_id: ownerId || user?.id,
       });
       if (error) throw error;
+      
+      // Add owner role if assigning to another user
+      if (ownerId && ownerId !== user?.id) {
+        const { data: existingRole } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", ownerId)
+          .eq("role", "owner")
+          .maybeSingle();
+        if (!existingRole) {
+          await supabase.from("user_roles").insert({ user_id: ownerId, role: "owner" });
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-businesses"] });

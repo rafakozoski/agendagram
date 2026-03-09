@@ -110,7 +110,7 @@ export default function BusinessPage() {
             alt={`Banner de ${business.name}`}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute inset-0 bg-background/20" />
           <div className="absolute bottom-0 left-0 right-0 container mx-auto px-6 pb-6 z-10">
             <Link
               to="/"

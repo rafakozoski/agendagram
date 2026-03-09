@@ -29,13 +29,28 @@ export const ESTADOS: Record<string, { nome: string; cidades: Record<string, str
   TO: { nome: "Tocantins", cidades: { "Palmas": ["Centro", "Aureny", "Jardim Aureny I", "Jardim Aureny II", "Taquaralto", "Taquaruçu"] } },
 };
 
+// Helper para obter lista de todas as cidades com estado
+export function getAllCitiesWithState(): { city: string; stateKey: string; stateName: string }[] {
+  const result: { city: string; stateKey: string; stateName: string }[] = [];
+  Object.entries(ESTADOS).forEach(([key, estado]) => {
+    Object.keys(estado.cidades).forEach(city => {
+      result.push({ city, stateKey: key, stateName: estado.nome });
+    });
+  });
+  return result.sort((a, b) => a.city.localeCompare(b.city));
+}
+
 // Helper para obter lista de todas as cidades únicas
 export function getAllCities(): string[] {
-  const cities = new Set<string>();
-  Object.values(ESTADOS).forEach(estado => {
-    Object.keys(estado.cidades).forEach(city => cities.add(city));
-  });
-  return Array.from(cities).sort();
+  return getAllCitiesWithState().map(c => c.city);
+}
+
+// Helper para encontrar o estado de uma cidade
+export function findStateByCity(city: string): string | null {
+  for (const [key, estado] of Object.entries(ESTADOS)) {
+    if (city in estado.cidades) return key;
+  }
+  return null;
 }
 
 // Helper para obter cidades de um estado

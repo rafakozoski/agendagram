@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
-import { ESTADOS, getCitiesByState, getNeighborhoods } from "@/lib/locations";
+import { ESTADOS, getCitiesByState, getNeighborhoods, getAllCitiesWithState, findStateByCity } from "@/lib/locations";
 
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -50,7 +50,9 @@ export function BusinessSettingsTab() {
     }
   }, [business]);
 
+  const allCities = getAllCitiesWithState();
   const selectedCities = form.state ? getCitiesByState(form.state) : [];
+  const citiesToShow = form.state ? selectedCities.map(c => ({ city: c, stateKey: form.state, stateName: ESTADOS[form.state]?.nome })) : allCities;
   const selectedNeighborhoods = (form.state && form.city)
     ? getNeighborhoods(form.state, form.city)
     : [];
@@ -339,13 +341,17 @@ export function BusinessSettingsTab() {
               <Label>Cidade</Label>
               <Select
                 value={form.city}
-                onValueChange={(v) => setForm({ ...form, city: v, neighborhood: "" })}
-                disabled={!form.state}
+                onValueChange={(v) => {
+                  const stateKey = findStateByCity(v);
+                  setForm({ ...form, city: v, neighborhood: "", state: stateKey || form.state });
+                }}
               >
-                <SelectTrigger><SelectValue placeholder={form.state ? "Selecione a cidade" : "Escolha o estado primeiro"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
                 <SelectContent>
-                  {selectedCities.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  {citiesToShow.map((c) => (
+                    <SelectItem key={`${c.stateKey}-${c.city}`} value={c.city}>
+                      {c.city} {!form.state && `(${c.stateKey})`}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

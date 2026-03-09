@@ -61,8 +61,9 @@ export function UsersTab() {
     setCreating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      const selectedPlan = PLANS.find(p => p.value === userForm.plan);
       const res = await supabase.functions.invoke("create-user-manual", {
-        body: { email: userForm.email, password: userForm.password, role: userForm.role },
+        body: { email: userForm.email, password: userForm.password, role: userForm.role, priceId: selectedPlan?.priceId || "" },
       });
 
       if (res.error) throw new Error(res.error.message);

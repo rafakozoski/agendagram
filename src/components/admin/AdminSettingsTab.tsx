@@ -475,6 +475,46 @@ export function AdminSettingsTab() {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!editCat} onOpenChange={(open) => !open && setEditCat(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Categoria</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome</Label>
+              <Input
+                value={catForm.name}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  const slug = name
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/\s+/g, "-")
+                    .replace(/[^a-z0-9-]/g, "");
+                  setCatForm({ name, slug });
+                }}
+              />
+            </div>
+            <div>
+              <Label>Slug</Label>
+              <Input
+                value={catForm.slug}
+                onChange={(e) => setCatForm({ ...catForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+              />
+            </div>
+            <Button
+              className="w-full gradient-primary text-primary-foreground"
+              onClick={() => editCat && updateCategory.mutate({ id: editCat.id, updates: catForm })}
+              disabled={updateCategory.isPending || !catForm.name.trim() || !catForm.slug.trim()}
+            >
+              {updateCategory.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Salvar Categoria
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

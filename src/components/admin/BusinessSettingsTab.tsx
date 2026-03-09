@@ -50,7 +50,9 @@ export function BusinessSettingsTab() {
     }
   }, [business]);
 
+  const allCities = getAllCitiesWithState();
   const selectedCities = form.state ? getCitiesByState(form.state) : [];
+  const citiesToShow = form.state ? selectedCities.map(c => ({ city: c, stateKey: form.state, stateName: ESTADOS[form.state]?.nome })) : allCities;
   const selectedNeighborhoods = (form.state && form.city)
     ? getNeighborhoods(form.state, form.city)
     : [];

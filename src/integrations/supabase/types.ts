@@ -287,6 +287,7 @@ export type Database = {
           name: string
           role: string
           user_id: string | null
+          view_all_bookings: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -296,6 +297,7 @@ export type Database = {
           name: string
           role?: string
           user_id?: string | null
+          view_all_bookings?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -305,6 +307,7 @@ export type Database = {
           name?: string
           role?: string
           user_id?: string | null
+          view_all_bookings?: boolean | null
         }
         Relationships: [
           {

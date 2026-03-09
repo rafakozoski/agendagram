@@ -105,6 +105,12 @@ export function BannersTab() {
             <div className="space-y-2">
               <Label>Imagem do Banner</Label>
               <Input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
+              <span className="text-xs text-muted-foreground">ou cole a URL da imagem:</span>
+              <Input
+                placeholder="https://exemplo.com/imagem.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+              />
               {imageUrl && (
                 <img src={imageUrl} alt="Preview" className="h-24 rounded-lg object-cover w-full" />
               )}

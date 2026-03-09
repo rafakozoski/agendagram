@@ -187,6 +187,22 @@ export function UsersTab() {
                 Owner: Gerencia seu próprio negócio. Admin: Acesso total ao sistema.
               </p>
             </div>
+            <div>
+              <Label>Plano de Assinatura</Label>
+              <Select value={userForm.plan} onValueChange={(v) => setUserForm({ ...userForm, plan: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLANS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecione um plano para criar a assinatura automaticamente no Stripe.
+              </p>
+            </div>
             <Button
               className="w-full gradient-primary text-primary-foreground"
               onClick={createUser}

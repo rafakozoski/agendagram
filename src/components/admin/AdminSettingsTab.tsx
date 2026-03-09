@@ -141,6 +141,19 @@ export function AdminSettingsTab() {
     },
   });
 
+  const updateCategory = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: { name: string; slug: string } }) => {
+      const { error } = await supabase.from("categories").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setEditCat(null);
+      toast.success("Categoria salva");
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
   const deleteCategory = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("categories").delete().eq("id", id);

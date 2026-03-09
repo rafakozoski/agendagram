@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Loader2, Users, UserPlus, Shield } from "lucide-react";
+import { Plus, Trash2, Loader2, Users, UserPlus, Shield, ShieldPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
@@ -24,8 +24,13 @@ const PLANS = [
 export function UsersTab() {
   const queryClient = useQueryClient();
   const [showNewUser, setShowNewUser] = useState(false);
+  const [showAddRole, setShowAddRole] = useState(false);
   const [userForm, setUserForm] = useState({ email: "", password: "", role: "owner" as AppRole, plan: "none" });
+  const [roleForm, setRoleForm] = useState({ email: "", role: "admin" as AppRole });
   const [creating, setCreating] = useState(false);
+  const [addingRole, setAddingRole] = useState(false);
+  const [roleLookup, setRoleLookup] = useState<{ id: string; email: string } | null>(null);
+  const [roleLookupError, setRoleLookupError] = useState("");
 
   const { data: userRoles = [], isLoading } = useQuery({
     queryKey: ["all-user-roles"],
@@ -48,6 +53,46 @@ export function UsersTab() {
     onError: (err: any) => toast.error(err.message),
   });
 
+  const lookupUser = async (email: string) => {
+    if (!email.trim()) return;
+    setRoleLookupError("");
+    setRoleLookup(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lookup-user-by-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Erro ao buscar usuário");
+      setRoleLookup(json);
+    } catch (err: any) {
+      setRoleLookupError(err.message);
+    }
+  };
+
+  const addRoleToUser = async () => {
+    if (!roleLookup) return;
+    setAddingRole(true);
+    try {
+      const { error } = await supabase.from("user_roles").insert({
+        user_id: roleLookup.id,
+        role: roleForm.role,
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["all-user-roles"] });
+      setShowAddRole(false);
+      setRoleForm({ email: "", role: "admin" });
+      setRoleLookup(null);
+      toast.success(`Role ${roleForm.role} adicionada com sucesso!`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao adicionar role");
+    } finally {
+      setAddingRole(false);
+    }
+  };
+
   const createUser = async () => {
     if (!userForm.email.trim() || !userForm.password.trim()) {
       toast.error("Email e senha são obrigatórios");
@@ -60,7 +105,6 @@ export function UsersTab() {
 
     setCreating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const selectedPlan = PLANS.find(p => p.value === userForm.plan);
       const res = await supabase.functions.invoke("create-user-manual", {
         body: { email: userForm.email, password: userForm.password, role: userForm.role, priceId: selectedPlan?.priceId || "" },
@@ -87,19 +131,29 @@ export function UsersTab() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
             Usuários com Roles ({userRoles.length})
           </CardTitle>
-          <Button
-            size="sm"
-            className="gradient-primary text-primary-foreground"
-            onClick={() => setShowNewUser(true)}
-          >
-            <UserPlus className="w-4 h-4 mr-1" />
-            Cadastrar Usuário
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setRoleForm({ email: "", role: "admin" }); setRoleLookup(null); setRoleLookupError(""); setShowAddRole(true); }}
+            >
+              <ShieldPlus className="w-4 h-4 mr-1" />
+              Adicionar Admin
+            </Button>
+            <Button
+              size="sm"
+              className="gradient-primary text-primary-foreground"
+              onClick={() => setShowNewUser(true)}
+            >
+              <UserPlus className="w-4 h-4 mr-1" />
+              Cadastrar Usuário
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {userRoles.length === 0 ? (
@@ -145,6 +199,68 @@ export function UsersTab() {
         </CardContent>
       </Card>
 
+      {/* Add Role to Existing User Dialog */}
+      <Dialog open={showAddRole} onOpenChange={setShowAddRole}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldPlus className="w-5 h-5" />
+              Adicionar Role a Usuário Existente
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Email do usuário *</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  value={roleForm.email}
+                  onChange={(e) => { setRoleForm({ ...roleForm, email: e.target.value }); setRoleLookup(null); setRoleLookupError(""); }}
+                  placeholder="usuario@exemplo.com"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => lookupUser(roleForm.email)}
+                  disabled={!roleForm.email.trim()}
+                >
+                  Buscar
+                </Button>
+              </div>
+              {roleLookup && (
+                <p className="text-xs text-primary mt-1 font-medium">✓ Usuário encontrado: {roleLookup.email}</p>
+              )}
+              {roleLookupError && (
+                <p className="text-xs text-destructive mt-1">{roleLookupError}</p>
+              )}
+            </div>
+            <div>
+              <Label>Role</Label>
+              <Select value={roleForm.role} onValueChange={(v: AppRole) => setRoleForm({ ...roleForm, role: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin (Administrador)</SelectItem>
+                  <SelectItem value="owner">Owner (Proprietário)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              className="w-full gradient-primary text-primary-foreground"
+              onClick={addRoleToUser}
+              disabled={addingRole || !roleLookup}
+            >
+              {addingRole ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              Adicionar Role
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create New User Dialog */}
       <Dialog open={showNewUser} onOpenChange={setShowNewUser}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -199,9 +315,6 @@ export function UsersTab() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Selecione um plano para criar a assinatura automaticamente no Stripe.
-              </p>
             </div>
             <Button
               className="w-full gradient-primary text-primary-foreground"

@@ -30,7 +30,7 @@ export function BannerCarousel({ position, halfHeight = false }: BannerCarouselP
   const content = banners.length === 1 ? (
     <BannerImage banner={banners[0]} maxH={maxH} />
   ) : (
-    <Carousel opts={{ loop: true }} className="w-full">
+    <Carousel opts={{ loop: true }} plugins={[Autoplay({ delay: 5000, stopOnInteraction: false })]} className="w-full">
       <CarouselContent>
         {banners.map((banner) => (
           <CarouselItem key={banner.id}>

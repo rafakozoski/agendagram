@@ -93,10 +93,12 @@ export function BusinessesTab() {
   const createBusiness = useMutation({
     mutationFn: async ({ form, ownerId }: { form: typeof emptyBizForm; ownerId?: string }) => {
       if (!form.name.trim() || !form.slug.trim()) throw new Error("Nome e slug são obrigatórios");
+      const stateName = states.find(s => s.code === form.state)?.name || form.state;
       const { error } = await supabase.from("businesses").insert({
         name: form.name.trim(),
         slug: form.slug.trim(),
         category: form.category,
+        state: stateName,
         city: form.city,
         neighborhood: form.neighborhood,
         phone: form.phone,

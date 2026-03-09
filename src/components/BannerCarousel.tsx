@@ -49,12 +49,12 @@ export function BannerCarousel({ position, halfHeight = false }: BannerCarouselP
   );
 }
 
-function BannerImage({ banner }: { banner: any }) {
+function BannerImage({ banner, maxH = "max-h-64" }: { banner: any; maxH?: string }) {
   const img = (
     <img
       src={banner.image_url}
       alt="Banner"
-      className="w-full h-auto max-h-64 object-cover rounded-xl"
+      className={`w-full h-auto ${maxH} object-cover rounded-xl`}
       loading="lazy"
     />
   );

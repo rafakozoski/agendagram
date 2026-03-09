@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, CheckCircle, Clock, XCircle, Loader2 } from "lucide-react";
+import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -18,8 +18,24 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 
 export function BusinessBookingsTab() {
   const queryClient = useQueryClient();
-  const { business, isLoading: bizLoading } = useMyBusiness();
+  const { business, isLoading: bizLoading, isProfessional, professionalId } = useMyBusiness();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [professionalFilter, setProfessionalFilter] = useState<string>("all");
+
+  const { data: professionals = [] } = useQuery({
+    queryKey: ["biz-professionals-list", business?.id],
+    queryFn: async () => {
+      if (!business) return [];
+      const { data, error } = await supabase
+        .from("professionals")
+        .select("id, name")
+        .eq("business_id", business.id)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!business,
+  });
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["business-bookings", business?.id],
@@ -47,7 +63,14 @@ export function BusinessBookingsTab() {
     },
   });
 
-  const filtered = statusFilter === "all" ? bookings : bookings.filter((b) => b.status === statusFilter);
+  // If user is a professional, force filter to their own bookings
+  const effectiveProfessionalFilter = isProfessional ? professionalId : professionalFilter;
+
+  const filtered = bookings.filter((b) => {
+    const matchStatus = statusFilter === "all" || b.status === statusFilter;
+    const matchProfessional = effectiveProfessionalFilter === "all" || b.professional_id === effectiveProfessionalFilter;
+    return matchStatus && matchProfessional;
+  });
 
   if (bizLoading || isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -58,9 +81,9 @@ export function BusinessBookingsTab() {
   }
 
   const stats = {
-    total: bookings.length,
-    pending: bookings.filter((b) => b.status === "pending").length,
-    confirmed: bookings.filter((b) => b.status === "confirmed").length,
+    total: filtered.length,
+    pending: filtered.filter((b) => b.status === "pending").length,
+    confirmed: filtered.filter((b) => b.status === "confirmed").length,
   };
 
   return (
@@ -72,19 +95,52 @@ export function BusinessBookingsTab() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
           <CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5" />Agenda</CardTitle>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="pending">Pendentes</SelectItem>
-              <SelectItem value="confirmed">Confirmados</SelectItem>
-              <SelectItem value="cancelled">Cancelados</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 flex-wrap">
+            {/* Professional filter - only show for owners, not professionals */}
+            {!isProfessional && professionals.length > 1 && (
+              <Select value={professionalFilter} onValueChange={setProfessionalFilter}>
+                <SelectTrigger className="w-48">
+                  <Building2 className="w-4 h-4 mr-1" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <span className="flex items-center gap-1">
+                      <Building2 className="w-3.5 h-3.5" /> Todos profissionais
+                    </span>
+                  </SelectItem>
+                  {professionals.map((pro) => (
+                    <SelectItem key={pro.id} value={pro.id}>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" /> {pro.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="pending">Pendentes</SelectItem>
+                <SelectItem value="confirmed">Confirmados</SelectItem>
+                <SelectItem value="cancelled">Cancelados</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
+          {isProfessional && (
+            <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <p className="text-sm text-primary font-medium flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Visualizando apenas sua agenda pessoal
+              </p>
+            </div>
+          )}
           {filtered.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nenhuma reserva encontrada.</p>
           ) : (
@@ -94,7 +150,7 @@ export function BusinessBookingsTab() {
                   <TableRow>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Serviço</TableHead>
-                    <TableHead>Profissional</TableHead>
+                    {!isProfessional && <TableHead>Profissional</TableHead>}
                     <TableHead>Data/Hora</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
@@ -111,7 +167,7 @@ export function BusinessBookingsTab() {
                         </div>
                       </TableCell>
                       <TableCell>{(booking.services as any)?.name ?? "—"}</TableCell>
-                      <TableCell>{(booking.professionals as any)?.name ?? "—"}</TableCell>
+                      {!isProfessional && <TableCell>{(booking.professionals as any)?.name ?? "—"}</TableCell>}
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm">
                           <Calendar className="w-3.5 h-3.5 text-muted-foreground" />

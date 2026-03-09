@@ -3,14 +3,21 @@ import { CalendarCheck, Store } from "lucide-react";
 import { motion } from "framer-motion";
 import { BusinessSettingsTab } from "@/components/admin/BusinessSettingsTab";
 import { BusinessBookingsTab } from "@/components/admin/BusinessBookingsTab";
+import { useMyBusiness } from "@/hooks/useMyBusiness";
 
 export default function BusinessPanel() {
+  const { isProfessional } = useMyBusiness();
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-6 py-10">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-bold mb-2">Meu Negócio</h1>
-          <p className="text-muted-foreground mb-8">Gerencie seu negócio</p>
+          <h1 className="text-3xl font-bold mb-2">
+            {isProfessional ? "Minha Agenda" : "Meu Negócio"}
+          </h1>
+          <p className="text-muted-foreground mb-8">
+            {isProfessional ? "Gerencie seus agendamentos" : "Gerencie seu negócio"}
+          </p>
         </motion.div>
 
         <Tabs defaultValue="agenda" className="space-y-6">
@@ -19,19 +26,23 @@ export default function BusinessPanel() {
               <CalendarCheck className="w-4 h-4" />
               Agenda
             </TabsTrigger>
-            <TabsTrigger value="business" className="gap-2">
-              <Store className="w-4 h-4" />
-              Minha Empresa
-            </TabsTrigger>
+            {!isProfessional && (
+              <TabsTrigger value="business" className="gap-2">
+                <Store className="w-4 h-4" />
+                Minha Empresa
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="agenda">
             <BusinessBookingsTab />
           </TabsContent>
 
-          <TabsContent value="business">
-            <BusinessSettingsTab />
-          </TabsContent>
+          {!isProfessional && (
+            <TabsContent value="business">
+              <BusinessSettingsTab />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

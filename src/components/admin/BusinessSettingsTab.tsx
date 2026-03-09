@@ -400,7 +400,12 @@ export function BusinessSettingsTab() {
                 <div key={svc.id} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 rounded-lg border items-end">
                   <div className="md:col-span-2">
                     <Label>Nome</Label>
-                    <Input defaultValue={svc.name} onBlur={(e) => updateService.mutate({ id: svc.id, updates: { name: e.target.value } })} />
+                    <AutocompleteInput
+                      suggestions={serviceCatalog}
+                      value={svc.name}
+                      onValueChange={(val) => updateService.mutate({ id: svc.id, updates: { name: val } })}
+                      placeholder="Digite o nome do serviço..."
+                    />
                   </div>
                   <div>
                     <Label>Preço (R$)</Label>

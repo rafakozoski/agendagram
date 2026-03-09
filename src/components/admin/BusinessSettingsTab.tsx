@@ -135,6 +135,7 @@ export function BusinessSettingsTab() {
     },
   });
 
+  const seedAvailability = async (businessId: string) => {
     const { data: existing } = await supabase.from("availability").select("id").eq("business_id", businessId).limit(1);
     if (!existing || existing.length === 0) {
       await supabase.from("availability").insert(

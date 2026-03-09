@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Loader2, Package } from "lucide-react";
+import { Plus, Trash2, Loader2, Package, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -12,6 +12,9 @@ export function ServiceCatalogTab() {
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("");
 
   const { data: catalog = [], isLoading } = useQuery({
     queryKey: ["service-catalog"],
@@ -42,6 +45,23 @@ export function ServiceCatalogTab() {
     onError: (err: any) => toast.error(err.message),
   });
 
+  const updateItem = useMutation({
+    mutationFn: async ({ id, name, category }: { id: string; name: string; category: string }) => {
+      if (!name.trim()) throw new Error("Nome é obrigatório");
+      const { error } = await supabase
+        .from("service_catalog")
+        .update({ name: name.trim(), category: category.trim() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-catalog"] });
+      setEditingId(null);
+      toast.success("Serviço atualizado");
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("service_catalog").delete().eq("id", id);
@@ -53,6 +73,18 @@ export function ServiceCatalogTab() {
     },
     onError: (err: any) => toast.error(err.message),
   });
+
+  const startEditing = (item: any) => {
+    setEditingId(item.id);
+    setEditName(item.name);
+    setEditCategory(item.category || "");
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditCategory("");
+  };
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -102,27 +134,69 @@ export function ServiceCatalogTab() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Categoria</TableHead>
-                <TableHead className="w-20">Ações</TableHead>
+                <TableHead className="w-28">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {catalog.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{item.category || "—"}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (window.confirm("Remover este serviço do catálogo?")) {
-                          deleteItem.mutate(item.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </TableCell>
+                  {editingId === item.id ? (
+                    <>
+                      <TableCell>
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && updateItem.mutate({ id: item.id, name: editName, category: editCategory })}
+                          autoFocus
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={editCategory}
+                          onChange={(e) => setEditCategory(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && updateItem.mutate({ id: item.id, name: editName, category: editCategory })}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => updateItem.mutate({ id: item.id, name: editName, category: editCategory })}
+                            disabled={!editName.trim() || updateItem.isPending}
+                          >
+                            <Check className="w-4 h-4 text-green-600" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={cancelEditing}>
+                            <X className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.category || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => startEditing(item)}>
+                            <Pencil className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              if (window.confirm("Remover este serviço do catálogo?")) {
+                                deleteItem.mutate(item.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

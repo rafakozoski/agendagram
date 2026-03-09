@@ -49,9 +49,9 @@ export function BusinessSettingsTab() {
     }
   }, [business]);
 
-  const selectedCities = form.state ? Object.keys(ESTADOS[form.state]?.cidades || {}) : [];
+  const selectedCities = form.state ? getCitiesByState(form.state) : [];
   const selectedNeighborhoods = (form.state && form.city)
-    ? (ESTADOS[form.state]?.cidades[form.city] || [])
+    ? getNeighborhoods(form.state, form.city)
     : [];
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -91,14 +91,28 @@ export default function Index() {
                 </Button>
               </Link>
             </div>
-            <div className="relative max-w-lg mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Busque por nome, cidade ou bairro..."
-                className="pl-12 h-14 text-base rounded-full bg-card border-0 shadow-lg"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+            <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Busque por nome ou bairro..."
+                  className="pl-12 h-14 text-base rounded-full bg-card border-0 shadow-lg"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger className="h-14 w-full sm:w-48 rounded-full bg-card border-0 shadow-lg">
+                  <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Cidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as cidades</SelectItem>
+                  {availableCities.map((city) => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </motion.div>
         </div>

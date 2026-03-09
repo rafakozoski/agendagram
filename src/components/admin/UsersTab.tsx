@@ -15,10 +15,16 @@ import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
+const PLANS = [
+  { value: "none", label: "Sem plano", priceId: "" },
+  { value: "basic", label: "Básico (R$ 29,90/mês)", priceId: "price_1T7Pe5JwkjwrgXgTJQBG5DKM" },
+  { value: "pro", label: "Pro (R$ 49,90/mês)", priceId: "price_1T7PecJwkjwrgXgTB9n8JMTb" },
+];
+
 export function UsersTab() {
   const queryClient = useQueryClient();
   const [showNewUser, setShowNewUser] = useState(false);
-  const [userForm, setUserForm] = useState({ email: "", password: "", role: "owner" as AppRole });
+  const [userForm, setUserForm] = useState({ email: "", password: "", role: "owner" as AppRole, plan: "none" });
   const [creating, setCreating] = useState(false);
 
   const { data: userRoles = [], isLoading } = useQuery({
@@ -55,8 +61,9 @@ export function UsersTab() {
     setCreating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      const selectedPlan = PLANS.find(p => p.value === userForm.plan);
       const res = await supabase.functions.invoke("create-user-manual", {
-        body: { email: userForm.email, password: userForm.password, role: userForm.role },
+        body: { email: userForm.email, password: userForm.password, role: userForm.role, priceId: selectedPlan?.priceId || "" },
       });
 
       if (res.error) throw new Error(res.error.message);
@@ -64,7 +71,7 @@ export function UsersTab() {
 
       queryClient.invalidateQueries({ queryKey: ["all-user-roles"] });
       setShowNewUser(false);
-      setUserForm({ email: "", password: "", role: "owner" });
+      setUserForm({ email: "", password: "", role: "owner", plan: "none" });
       toast.success("Usuário criado com sucesso!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao criar usuário");
@@ -178,6 +185,22 @@ export function UsersTab() {
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
                 Owner: Gerencia seu próprio negócio. Admin: Acesso total ao sistema.
+              </p>
+            </div>
+            <div>
+              <Label>Plano de Assinatura</Label>
+              <Select value={userForm.plan} onValueChange={(v) => setUserForm({ ...userForm, plan: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLANS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecione um plano para criar a assinatura automaticamente no Stripe.
               </p>
             </div>
             <Button

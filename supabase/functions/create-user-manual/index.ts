@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,7 +49,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { email, password, role } = await req.json();
+    const { email, password, role, priceId } = await req.json();
     
     if (!email || !password) {
       return new Response(JSON.stringify({ error: "Email e senha são obrigatórios" }), {
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm the email
+      email_confirm: true,
     });
 
     if (createError) {
@@ -86,6 +87,45 @@ Deno.serve(async (req) => {
 
       if (roleError) {
         console.error("Error adding role:", roleError);
+      }
+    }
+
+    // Create Stripe subscription if a plan was selected
+    let subscriptionInfo = null;
+    if (priceId && newUser.user) {
+      try {
+        const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+          apiVersion: "2025-08-27.basil",
+        });
+
+        // Create or find Stripe customer
+        const customers = await stripe.customers.list({ email, limit: 1 });
+        let customerId: string;
+        if (customers.data.length > 0) {
+          customerId = customers.data[0].id;
+        } else {
+          const customer = await stripe.customers.create({ email });
+          customerId = customer.id;
+        }
+
+        // Create subscription with a trial (no payment needed for admin-created users)
+        const subscription = await stripe.subscriptions.create({
+          customer: customerId,
+          items: [{ price: priceId }],
+          trial_period_days: 30,
+          payment_settings: {
+            save_default_payment_method: "on_subscription",
+          },
+        });
+
+        subscriptionInfo = {
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          trialEnd: subscription.trial_end,
+        };
+        console.log("Stripe subscription created:", subscriptionInfo);
+      } catch (stripeErr: any) {
+        console.error("Error creating Stripe subscription:", stripeErr.message);
         // Don't fail the request, user was created successfully
       }
     }
@@ -93,7 +133,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user: { id: newUser.user?.id, email: newUser.user?.email } 
+        user: { id: newUser.user?.id, email: newUser.user?.email },
+        subscription: subscriptionInfo,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

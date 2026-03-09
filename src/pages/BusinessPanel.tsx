@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarCheck, Store } from "lucide-react";
+import { CalendarCheck, Store, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 import { BusinessSettingsTab } from "@/components/admin/BusinessSettingsTab";
 import { BusinessBookingsTab } from "@/components/admin/BusinessBookingsTab";
+import { BusinessPaymentTab } from "@/components/admin/BusinessPaymentTab";
 import { useMyBusiness } from "@/hooks/useMyBusiness";
 
 export default function BusinessPanel() {
@@ -27,10 +28,16 @@ export default function BusinessPanel() {
               Agenda
             </TabsTrigger>
             {!isProfessional && (
-              <TabsTrigger value="business" className="gap-2">
-                <Store className="w-4 h-4" />
-                Minha Empresa
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="business" className="gap-2">
+                  <Store className="w-4 h-4" />
+                  Minha Empresa
+                </TabsTrigger>
+                <TabsTrigger value="payments" className="gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Pagamentos
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -39,9 +46,14 @@ export default function BusinessPanel() {
           </TabsContent>
 
           {!isProfessional && (
-            <TabsContent value="business">
-              <BusinessSettingsTab />
-            </TabsContent>
+            <>
+              <TabsContent value="business">
+                <BusinessSettingsTab />
+              </TabsContent>
+              <TabsContent value="payments">
+                <BusinessPaymentTab />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </div>

@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import { Link } from "react-router-dom";
+import { Crown } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
 
 interface BannerCarouselProps {
@@ -23,7 +25,24 @@ export function BannerCarousel({ position, halfHeight = false }: BannerCarouselP
     },
   });
 
-  if (banners.length === 0) return null;
+  if (banners.length === 0) {
+    if (position === "top") {
+      return (
+        <section className="container mx-auto px-6 py-6">
+          <Link to="/pricing" className="block">
+            <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors p-6 flex items-center justify-center gap-3 text-center">
+              <Crown className="w-5 h-5 text-primary shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">Banner de destaque</span> — disponível exclusivamente para assinantes do plano <span className="font-semibold text-primary">Pro</span>.{" "}
+                <span className="underline text-primary">Saiba mais →</span>
+              </p>
+            </div>
+          </Link>
+        </section>
+      );
+    }
+    return null;
+  }
 
   const maxH = halfHeight ? "max-h-32" : "max-h-64";
 

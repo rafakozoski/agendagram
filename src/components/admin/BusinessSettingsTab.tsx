@@ -341,13 +341,17 @@ export function BusinessSettingsTab() {
               <Label>Cidade</Label>
               <Select
                 value={form.city}
-                onValueChange={(v) => setForm({ ...form, city: v, neighborhood: "" })}
-                disabled={!form.state}
+                onValueChange={(v) => {
+                  const stateKey = findStateByCity(v);
+                  setForm({ ...form, city: v, neighborhood: "", state: stateKey || form.state });
+                }}
               >
-                <SelectTrigger><SelectValue placeholder={form.state ? "Selecione a cidade" : "Escolha o estado primeiro"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
                 <SelectContent>
-                  {selectedCities.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  {citiesToShow.map((c) => (
+                    <SelectItem key={`${c.stateKey}-${c.city}`} value={c.city}>
+                      {c.city} {!form.state && `(${c.stateKey})`}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

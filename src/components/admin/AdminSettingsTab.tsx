@@ -18,6 +18,8 @@ export function AdminSettingsTab() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [newCatName, setNewCatName] = useState("");
+  const [editCat, setEditCat] = useState<any>(null);
+  const [catForm, setCatForm] = useState({ name: "", slug: "" });
   const [editBiz, setEditBiz] = useState<any>(null);
   const [showNewBiz, setShowNewBiz] = useState(false);
   const emptyBizForm = { name: "", slug: "", category: "beleza", city: "", neighborhood: "", phone: "", description: "", ownerEmail: "" };
@@ -139,6 +141,19 @@ export function AdminSettingsTab() {
     },
   });
 
+  const updateCategory = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: { name: string; slug: string } }) => {
+      const { error } = await supabase.from("categories").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setEditCat(null);
+      toast.success("Categoria salva");
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
   const deleteCategory = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("categories").delete().eq("id", id);
@@ -206,14 +221,22 @@ export function AdminSettingsTab() {
           {categories.map((cat) => (
             <div key={cat.id} className="flex items-center gap-3 p-3 rounded-lg border">
               <Switch
-                checked={cat.enabled}
+                checked={cat.enabled ?? true}
                 onCheckedChange={(enabled) => toggleCategory.mutate({ id: cat.id, enabled })}
               />
               <span className={`font-medium flex-1 ${!cat.enabled ? "text-muted-foreground line-through" : ""}`}>
                 {cat.name}
               </span>
               <Badge variant="outline" className="text-xs">{cat.slug}</Badge>
-              <Button variant="ghost" size="icon" onClick={() => deleteCategory.mutate(cat.id)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => { setEditCat(cat); setCatForm({ name: cat.name, slug: cat.slug }); }}
+                title="Editar"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => deleteCategory.mutate(cat.id)} title="Remover">
                 <Trash2 className="w-4 h-4 text-destructive" />
               </Button>
             </div>
@@ -448,6 +471,46 @@ export function AdminSettingsTab() {
             >
               {createBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
               Criar Empresa
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!editCat} onOpenChange={(open) => !open && setEditCat(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Categoria</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome</Label>
+              <Input
+                value={catForm.name}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  const slug = name
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/\s+/g, "-")
+                    .replace(/[^a-z0-9-]/g, "");
+                  setCatForm({ name, slug });
+                }}
+              />
+            </div>
+            <div>
+              <Label>Slug</Label>
+              <Input
+                value={catForm.slug}
+                onChange={(e) => setCatForm({ ...catForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+              />
+            </div>
+            <Button
+              className="w-full gradient-primary text-primary-foreground"
+              onClick={() => editCat && updateCategory.mutate({ id: editCat.id, updates: catForm })}
+              disabled={updateCategory.isPending || !catForm.name.trim() || !catForm.slug.trim()}
+            >
+              {updateCategory.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Salvar Categoria
             </Button>
           </div>
         </DialogContent>

@@ -323,7 +323,12 @@ export function BusinessesTab() {
             </div>
             <Button
               className="w-full gradient-primary text-primary-foreground"
-              onClick={() => editBiz && updateBusiness.mutate({ id: editBiz.id, updates: bizForm })}
+              onClick={() => {
+                if (!editBiz) return;
+                const { ownerEmail, state, ...rest } = bizForm;
+                const stateName = states.find(s => s.code === state)?.name || state;
+                updateBusiness.mutate({ id: editBiz.id, updates: { ...rest, state: stateName } });
+              }}
               disabled={updateBusiness.isPending}
             >
               {updateBusiness.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}

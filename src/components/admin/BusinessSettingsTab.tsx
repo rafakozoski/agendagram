@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
-import { ESTADOS, getCitiesByState, getNeighborhoods } from "@/lib/locations";
+import { ESTADOS, getCitiesByState, getNeighborhoods, getAllCitiesWithState, findStateByCity } from "@/lib/locations";
 
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 

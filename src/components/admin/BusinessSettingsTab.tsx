@@ -165,6 +165,9 @@ export function BusinessSettingsTab() {
         if (error) throw error;
         await seedAvailability(business.id);
       } else {
+        if (ownedBusinesses.length >= 1) {
+          throw new Error("Você já possui um estabelecimento cadastrado. Não é permitido criar mais de um.");
+        }
         const { data: newBiz, error } = await supabase
           .from("businesses")
           .insert({ ...payload, owner_id: user!.id })

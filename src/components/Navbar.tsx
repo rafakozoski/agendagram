@@ -23,21 +23,37 @@ export function Navbar() {
           <span className="font-bold text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Reservagram</span>
         </Link>
         <div className="hidden md:flex items-center gap-3">
-          {isAdmin && user && (
+          {isPanel && user && (
             <>
-              <Link to="/admin">
+              <Link to={panelLink}>
                 <Button variant="default" size="sm">
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Painel
                 </Button>
               </Link>
+              {isAdmin && !location.pathname.startsWith("/admin") && (
+                <Link to="/admin">
+                  <Button variant="outline" size="sm">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
+              {isAdmin && location.pathname.startsWith("/admin") && (
+                <Link to="/painel">
+                  <Button variant="outline" size="sm">
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Meu Negócio
+                  </Button>
+                </Link>
+              )}
               <Button variant="ghost" size="sm" onClick={signOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </Button>
             </>
           )}
-          {!isAdmin && (
+          {!isPanel && (
             <>
               <Link to="/">
                 <Button variant="ghost" size="sm">
@@ -51,7 +67,7 @@ export function Navbar() {
                 </Button>
               </Link>
               {user ? (
-                <Link to="/admin">
+                <Link to={panelLink}>
                   <Button variant="default" size="sm" className="gradient-primary text-primary-foreground">
                     <LayoutDashboard className="w-4 h-4 mr-2" />
                     Painel

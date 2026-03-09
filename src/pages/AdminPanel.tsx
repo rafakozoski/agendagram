@@ -37,6 +37,10 @@ export default function AdminPanel() {
               <Package className="w-4 h-4" />
               Todas Reservas
             </TabsTrigger>
+            <TabsTrigger value="banners" className="gap-2">
+              <Image className="w-4 h-4" />
+              Banners
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="w-4 h-4" />
               Categorias

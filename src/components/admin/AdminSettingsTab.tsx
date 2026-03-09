@@ -148,6 +148,28 @@ export function AdminSettingsTab() {
     },
   });
 
+  const lookupOwner = async (email: string) => {
+    if (!email.trim()) { setOwnerLookup(null); setOwnerLookupError(""); return; }
+    setLookingUpOwner(true);
+    setOwnerLookupError("");
+    setOwnerLookup(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lookup-user-by-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Erro ao buscar usuário");
+      setOwnerLookup(json);
+    } catch (err: any) {
+      setOwnerLookupError(err.message);
+    } finally {
+      setLookingUpOwner(false);
+    }
+  };
+
   const openEditBiz = (biz: any) => {
     setEditBiz(biz);
     setBizForm({
@@ -158,7 +180,10 @@ export function AdminSettingsTab() {
       neighborhood: biz.neighborhood || "",
       phone: biz.phone || "",
       description: biz.description || "",
+      ownerEmail: "",
     });
+    setOwnerLookup(null);
+    setOwnerLookupError("");
   };
 
   if (catLoading || bizLoading) {

@@ -10,7 +10,9 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X, UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { ESTADOS, getCitiesByState, getNeighborhoods, getAllCitiesWithState, findStateByCity } from "@/lib/locations";
 

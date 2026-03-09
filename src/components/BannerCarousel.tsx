@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 
 interface BannerCarouselProps {
-  position: "top" | "middle";
+  position: "top" | "middle" | "bottom";
+  halfHeight?: boolean;
 }
 
 export function BannerCarousel({ position }: BannerCarouselProps) {

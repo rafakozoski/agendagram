@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarCheck, Store, CreditCard } from "lucide-react";
+import { CalendarCheck, Store, CreditCard, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 import { BusinessSettingsTab } from "@/components/admin/BusinessSettingsTab";
 import { BusinessBookingsTab } from "@/components/admin/BusinessBookingsTab";
 import { BusinessPaymentTab } from "@/components/admin/BusinessPaymentTab";

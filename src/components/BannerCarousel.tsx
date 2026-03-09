@@ -33,7 +33,7 @@ export function BannerCarousel({ position, halfHeight = false }: BannerCarouselP
       <CarouselContent>
         {banners.map((banner) => (
           <CarouselItem key={banner.id}>
-            <BannerImage banner={banner} />
+            <BannerImage banner={banner} maxH={maxH} />
           </CarouselItem>
         ))}
       </CarouselContent>

@@ -13,6 +13,7 @@ import BusinessPanel from "./pages/BusinessPanel";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import PricingPage from "./pages/PricingPage";
+import ContratarPage from "./pages/ContratarPage";
 
 const queryClient = new QueryClient();
 

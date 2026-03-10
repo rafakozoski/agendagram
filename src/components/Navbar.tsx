@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Calendar, LayoutDashboard, LogIn, LogOut, Menu, Shield, X } from "lucide-react";
+import { LayoutDashboard, LogIn, LogOut, Menu, Shield, X } from "lucide-react";
+import logoImg from "@/assets/logo-reservagram.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -17,10 +18,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-            <Calendar className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Reservagram</span>
+          <img src={logoImg} alt="Reservagram" className="h-8" />
         </Link>
         <div className="hidden md:flex items-center gap-3">
           {isPanel && user && (
@@ -57,7 +55,6 @@ export function Navbar() {
             <>
               <Link to="/">
                 <Button variant="ghost" size="sm">
-                  <Calendar className="w-4 h-4 mr-2" />
                   Início
                 </Button>
               </Link>

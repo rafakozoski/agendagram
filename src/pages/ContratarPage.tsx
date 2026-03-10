@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CalendarCheck, Link2, TrendingUp, Zap, ArrowRight, CheckCircle2, Star } from "lucide-react";
-import logoImg from "@/assets/logo-reservagram.png";
+import logoImg from "@/assets/logo-reservagram-bc.png";
 
 const BENEFITS = [
   {

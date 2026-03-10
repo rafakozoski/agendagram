@@ -55,7 +55,6 @@ export function Navbar() {
             <>
               <Link to="/">
                 <Button variant="ghost" size="sm">
-                  <Calendar className="w-4 h-4 mr-2" />
                   Início
                 </Button>
               </Link>

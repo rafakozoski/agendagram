@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, LogIn, LogOut, Menu, Shield, X } from "lucide-react";
+import { LayoutDashboard, LogIn, LogOut, Menu, Shield, X, CalendarCheck } from "lucide-react";
 import logoImg from "@/assets/logo-reservagram.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,38 +21,38 @@ export function Navbar() {
           <img src={logoImg} alt="Reservagram" className="h-8" />
         </Link>
         <div className="hidden md:flex items-center gap-3">
-          {isPanel && user && (
-            <>
+          {isPanel && user &&
+          <>
               <Link to={panelLink}>
                 <Button variant="default" size="sm">
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  <CalendarCheck className="w-4 h-4 mr-2" />
                   Painel
                 </Button>
               </Link>
-              {isAdmin && !location.pathname.startsWith("/admin") && (
-                <Link to="/admin">
+              {isAdmin && !location.pathname.startsWith("/admin") &&
+            <Link to="/admin">
                   <Button variant="outline" size="sm">
                     <Shield className="w-4 h-4 mr-2" />
                     Admin
                   </Button>
                 </Link>
-              )}
-              {isAdmin && location.pathname.startsWith("/admin") && (
-                <Link to="/painel">
+            }
+              {isAdmin && location.pathname.startsWith("/admin") &&
+            <Link to="/painel">
                   <Button variant="outline" size="sm">
                     <LayoutDashboard className="w-4 h-4 mr-2" />
                     Meu Negócio
                   </Button>
                 </Link>
-              )}
+            }
               <Button variant="ghost" size="sm" onClick={signOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </Button>
             </>
-          )}
-          {!isPanel && (
-            <>
+          }
+          {!isPanel &&
+          <>
               <Link to="/">
                 <Button variant="ghost" size="sm">
                   Início
@@ -63,67 +63,67 @@ export function Navbar() {
                   Planos
                 </Button>
               </Link>
-              {user ? (
-                <Link to={panelLink}>
+              {user ?
+            <Link to={panelLink}>
                   <Button variant="default" size="sm" className="gradient-primary text-primary-foreground">
                     <LayoutDashboard className="w-4 h-4 mr-2" />
                     Painel
                   </Button>
-                </Link>
-              ) : (
-                <Link to="/login">
+                </Link> :
+
+            <Link to="/login">
                   <Button variant="default" size="sm" className="gradient-primary text-primary-foreground">
                     <LogIn className="w-4 h-4 mr-2" />
                     Entrar
                   </Button>
                 </Link>
-              )}
+            }
             </>
-          )}
+          }
         </div>
         <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(!open)}>
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
       </div>
-      {open && (
-        <div className="md:hidden border-t bg-card px-6 py-4 space-y-2">
+      {open &&
+      <div className="md:hidden border-t bg-card px-6 py-4 space-y-2">
           <Link to="/" onClick={() => setOpen(false)}>
             <Button variant="ghost" className="w-full justify-start">Início</Button>
           </Link>
           <Link to="/pricing" onClick={() => setOpen(false)}>
             <Button variant="ghost" className="w-full justify-start">Planos</Button>
           </Link>
-          {user ? (
-            <>
+          {user ?
+        <>
               <Link to={panelLink} onClick={() => setOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start">
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Painel
                 </Button>
               </Link>
-              {isAdmin && (
-                <Link to="/admin" onClick={() => setOpen(false)}>
+              {isAdmin &&
+          <Link to="/admin" onClick={() => setOpen(false)}>
                   <Button variant="ghost" className="w-full justify-start">
                     <Shield className="w-4 h-4 mr-2" />
                     Admin
                   </Button>
                 </Link>
-              )}
-              <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); setOpen(false); }}>
+          }
+              <Button variant="ghost" className="w-full justify-start" onClick={() => {signOut();setOpen(false);}}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </Button>
-            </>
-          ) : (
-            <Link to="/login" onClick={() => setOpen(false)}>
+            </> :
+
+        <Link to="/login" onClick={() => setOpen(false)}>
               <Button variant="ghost" className="w-full justify-start">
                 <LogIn className="w-4 h-4 mr-2" />
                 Entrar
               </Button>
             </Link>
-          )}
+        }
         </div>
-      )}
-    </nav>
-  );
+      }
+    </nav>);
+
 }

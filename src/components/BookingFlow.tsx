@@ -80,6 +80,7 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
             booking_time: selectedTime,
             business_name: (businessData as any)?.name,
             price: serviceData?.price,
+            business_id: businessId ?? null,
           },
         })
         .catch((err) => console.warn("Email não enviado:", err));

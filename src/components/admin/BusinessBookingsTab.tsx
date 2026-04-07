@@ -100,7 +100,6 @@ export function BusinessBookingsTab() {
           <CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5" />Agenda</CardTitle>
           <div className="flex gap-2 flex-wrap items-center">
             <ManualBookingDialog businessId={business.id} />
-          <div className="flex gap-2 flex-wrap">
             {/* Professional filter - only show for owners, not professionals */}
             {!isProfessional && professionals.length > 1 && (
               <Select value={professionalFilter} onValueChange={setProfessionalFilter}>

@@ -163,7 +163,14 @@ export function BusinessBookingsTab() {
               </p>
             </div>
           )}
-          {filtered.length === 0 ? (
+
+          {viewMode === "calendar" ? (
+            <WeeklyCalendarView
+              bookings={filtered}
+              onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
+              isProfessional={isProfessional}
+            />
+          ) : filtered.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nenhuma reserva encontrada.</p>
           ) : (
             <div className="overflow-x-auto">

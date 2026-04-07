@@ -6,10 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2 } from "lucide-react";
+import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2, List, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ManualBookingDialog } from "./ManualBookingDialog";
+import { WeeklyCalendarView } from "./WeeklyCalendarView";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "secondary" },

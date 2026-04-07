@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { ManualBookingDialog } from "./ManualBookingDialog";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "secondary" },
@@ -97,7 +98,8 @@ export function BusinessBookingsTab() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
           <CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5" />Agenda</CardTitle>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
+            <ManualBookingDialog businessId={business.id} />
             {/* Professional filter - only show for owners, not professionals */}
             {!isProfessional && professionals.length > 1 && (
               <Select value={professionalFilter} onValueChange={setProfessionalFilter}>

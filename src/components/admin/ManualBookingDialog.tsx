@@ -21,6 +21,8 @@ interface ManualBookingDialogProps {
 export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [clientMode, setClientMode] = useState<"select" | "manual">("select");
+  const [selectedClientId, setSelectedClientId] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -35,6 +37,20 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
       const { data, error } = await supabase
         .from("services")
         .select("id, name, price, duration")
+        .eq("business_id", businessId)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ["manual-bk-clients", businessId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, name, email, phone")
         .eq("business_id", businessId)
         .order("name");
       if (error) throw error;
@@ -63,14 +79,23 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
     return `${String(h).padStart(2, "0")}:${m}`;
   });
 
+  const resolvedClient = () => {
+    if (clientMode === "select" && selectedClientId) {
+      const c = clients.find((cl) => cl.id === selectedClientId);
+      return { name: c?.name || "", email: c?.email || "", phone: c?.phone || "" };
+    }
+    return { name: clientName.trim(), email: clientEmail.trim(), phone: clientPhone.trim() };
+  };
+
   const createBooking = useMutation({
     mutationFn: async () => {
       if (!date) throw new Error("Data obrigatória");
+      const client = resolvedClient();
       const { error } = await supabase.from("bookings").insert({
         business_id: businessId,
-        client_name: clientName.trim(),
-        client_email: clientEmail.trim(),
-        client_phone: clientPhone.trim(),
+        client_name: client.name,
+        client_email: client.email,
+        client_phone: client.phone,
         service_id: serviceId || null,
         professional_id: professionalId || null,
         booking_date: format(date, "yyyy-MM-dd"),
@@ -91,6 +116,8 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
   });
 
   const resetForm = () => {
+    setClientMode("select");
+    setSelectedClientId("");
     setClientName("");
     setClientEmail("");
     setClientPhone("");
@@ -100,7 +127,8 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
     setTime("");
   };
 
-  const canSubmit = clientName.trim() && date && time;
+  const hasClient = clientMode === "select" ? !!selectedClientId : !!clientName.trim();
+  const canSubmit = hasClient && date && time;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -115,20 +143,63 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
           <DialogTitle>Novo Agendamento Manual</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Nome do cliente *</Label>
-            <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Nome completo" />
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={clientMode === "select" ? "default" : "outline"}
+              onClick={() => setClientMode("select")}
+              className="flex-1"
+            >
+              Cliente cadastrado
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={clientMode === "manual" ? "default" : "outline"}
+              onClick={() => setClientMode("manual")}
+              className="flex-1"
+            >
+              Novo cliente
+            </Button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          {clientMode === "select" ? (
             <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="email@exemplo.com" />
+              <Label>Cliente *</Label>
+              <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                <SelectTrigger><SelectValue placeholder="Selecionar cliente" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}{c.phone ? ` — ${c.phone}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {clients.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nenhum cliente cadastrado. Use "Novo cliente".</p>
+              )}
             </div>
-            <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="(11) 99999-0000" />
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label>Nome do cliente *</Label>
+                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Nome completo" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="email@exemplo.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefone</Label>
+                  <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="(11) 99999-0000" />
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="space-y-2">
             <Label>Serviço</Label>
             <Select value={serviceId} onValueChange={setServiceId}>

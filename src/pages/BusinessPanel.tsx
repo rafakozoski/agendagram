@@ -1,11 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarCheck, Store, CreditCard, User, Building2, ChevronDown } from "lucide-react";
+import { CalendarCheck, Store, CreditCard, User, Building2, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BusinessSettingsTab } from "@/components/admin/BusinessSettingsTab";
 import { BusinessBookingsTab } from "@/components/admin/BusinessBookingsTab";
 import { BusinessPaymentTab } from "@/components/admin/BusinessPaymentTab";
+import { ClientsTab } from "@/components/admin/ClientsTab";
 import { useMyBusiness } from "@/hooks/useMyBusiness";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -62,6 +63,10 @@ export default function BusinessPanel() {
             </TabsTrigger>
             {!isProfessional && (
               <>
+                <TabsTrigger value="clients" className="gap-2">
+                  <Users className="w-4 h-4" />
+                  Clientes
+                </TabsTrigger>
                 <TabsTrigger value="business" className="gap-2">
                   <Store className="w-4 h-4" />
                   Minha Empresa
@@ -80,6 +85,9 @@ export default function BusinessPanel() {
 
           {!isProfessional && (
             <>
+              <TabsContent value="clients">
+                <ClientsTab />
+              </TabsContent>
               <TabsContent value="business">
                 <BusinessSettingsTab />
               </TabsContent>

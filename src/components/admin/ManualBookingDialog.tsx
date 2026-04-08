@@ -100,7 +100,7 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
     setTime("");
   };
 
-  const canSubmit = clientName.trim() && clientEmail.trim() && clientPhone.trim() && date && time;
+  const canSubmit = clientName.trim() && date && time;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -121,11 +121,11 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Email *</Label>
+              <Label>Email</Label>
               <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="email@exemplo.com" />
             </div>
             <div className="space-y-2">
-              <Label>Telefone *</Label>
+              <Label>Telefone</Label>
               <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="(11) 99999-0000" />
             </div>
           </div>

@@ -21,6 +21,8 @@ interface ManualBookingDialogProps {
 export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [clientMode, setClientMode] = useState<"select" | "manual">("select");
+  const [selectedClientId, setSelectedClientId] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");

@@ -116,6 +116,8 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
   });
 
   const resetForm = () => {
+    setClientMode("select");
+    setSelectedClientId("");
     setClientName("");
     setClientEmail("");
     setClientPhone("");
@@ -125,7 +127,8 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
     setTime("");
   };
 
-  const canSubmit = clientName.trim() && date && time;
+  const hasClient = clientMode === "select" ? !!selectedClientId : !!clientName.trim();
+  const canSubmit = hasClient && date && time;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -140,20 +143,63 @@ export function ManualBookingDialog({ businessId }: ManualBookingDialogProps) {
           <DialogTitle>Novo Agendamento Manual</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Nome do cliente *</Label>
-            <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Nome completo" />
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={clientMode === "select" ? "default" : "outline"}
+              onClick={() => setClientMode("select")}
+              className="flex-1"
+            >
+              Cliente cadastrado
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={clientMode === "manual" ? "default" : "outline"}
+              onClick={() => setClientMode("manual")}
+              className="flex-1"
+            >
+              Novo cliente
+            </Button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          {clientMode === "select" ? (
             <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="email@exemplo.com" />
+              <Label>Cliente *</Label>
+              <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                <SelectTrigger><SelectValue placeholder="Selecionar cliente" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}{c.phone ? ` — ${c.phone}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {clients.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nenhum cliente cadastrado. Use "Novo cliente".</p>
+              )}
             </div>
-            <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="(11) 99999-0000" />
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label>Nome do cliente *</Label>
+                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Nome completo" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="email@exemplo.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefone</Label>
+                  <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="(11) 99999-0000" />
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="space-y-2">
             <Label>Serviço</Label>
             <Select value={serviceId} onValueChange={setServiceId}>

@@ -1,17 +1,28 @@
 import { useState } from "react";
-import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CheckCircle, XCircle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-500/20 border-yellow-500/40 text-yellow-700 dark:text-yellow-400",
-  confirmed: "bg-green-500/20 border-green-500/40 text-green-700 dark:text-green-400",
-  cancelled: "bg-destructive/20 border-destructive/40 text-destructive",
-};
+const today = () => startOfDay(new Date());
+
+function getStatusColor(status: string, bookingDate: string) {
+  const isPast = isBefore(new Date(bookingDate + "T23:59:59"), today());
+
+  if (isPast && status !== "cancelled") {
+    return "bg-muted/60 border-border text-muted-foreground";
+  }
+
+  const colors: Record<string, string> = {
+    pending: "bg-yellow-500/20 border-yellow-500/40 text-yellow-700 dark:text-yellow-400",
+    confirmed: "bg-green-500/20 border-green-500/40 text-green-700 dark:text-green-400",
+    cancelled: "bg-red-500/20 border-red-500/40 text-red-700 dark:text-red-400",
+  };
+  return colors[status] ?? "bg-muted border-border";
+}
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pendente",
@@ -19,7 +30,7 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelado",
 };
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 07:00–20:00
+const HOURS = Array.from({ length: 14 }, (_, i) => i + 7);
 
 interface WeeklyCalendarViewProps {
   bookings: any[];
@@ -31,6 +42,7 @@ export function WeeklyCalendarView({ bookings, onUpdateStatus, isProfessional }:
   const [weekStart, setWeekStart] = useState(() =>
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -46,7 +58,7 @@ export function WeeklyCalendarView({ bookings, onUpdateStatus, isProfessional }:
   const nextWeek = () => setWeekStart((d) => addDays(d, 7));
   const goToday = () => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
 
-  const isToday = (day: Date) => isSameDay(day, new Date());
+  const isCurrentDay = (day: Date) => isSameDay(day, new Date());
 
   return (
     <div className="space-y-3">
@@ -79,7 +91,7 @@ export function WeeklyCalendarView({ bookings, onUpdateStatus, isProfessional }:
                 key={day.toISOString()}
                 className={cn(
                   "p-2 text-center border-l",
-                  isToday(day) && "bg-primary/10"
+                  isCurrentDay(day) && "bg-primary/10"
                 )}
               >
                 <p className="text-xs text-muted-foreground uppercase">
@@ -87,7 +99,7 @@ export function WeeklyCalendarView({ bookings, onUpdateStatus, isProfessional }:
                 </p>
                 <p className={cn(
                   "text-sm font-semibold",
-                  isToday(day) && "text-primary"
+                  isCurrentDay(day) && "text-primary"
                 )}>
                   {format(day, "dd")}
                 </p>
@@ -108,47 +120,22 @@ export function WeeklyCalendarView({ bookings, onUpdateStatus, isProfessional }:
                     key={day.toISOString() + hour}
                     className={cn(
                       "border-l p-0.5 min-h-[52px]",
-                      isToday(day) && "bg-primary/5"
+                      isCurrentDay(day) && "bg-primary/5"
                     )}
                   >
                     {slotBookings.map((b) => (
-                      <Tooltip key={b.id}>
-                        <TooltipTrigger asChild>
-                          <div className={cn(
-                            "rounded px-1.5 py-0.5 text-[11px] leading-tight border cursor-default mb-0.5 truncate",
-                            STATUS_COLORS[b.status] ?? "bg-muted border-border"
-                          )}>
-                            <span className="font-medium">{b.booking_time?.slice(0, 5)}</span>
-                            {" "}
-                            <span className="truncate">{b.client_name}</span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-xs">
-                          <div className="space-y-1 text-xs">
-                            <p className="font-semibold">{b.client_name}</p>
-                            <p>{b.client_phone}</p>
-                            <p>{(b.services as any)?.name ?? "Sem serviço"}</p>
-                            {!isProfessional && <p>Prof: {(b.professionals as any)?.name ?? "—"}</p>}
-                            <div className="flex items-center gap-1">
-                              <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                {STATUS_LABELS[b.status] ?? b.status}
-                              </Badge>
-                            </div>
-                            <div className="flex gap-1 pt-1">
-                              {b.status !== "confirmed" && b.status !== "cancelled" && (
-                                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => onUpdateStatus(b.id, "confirmed")}>
-                                  <CheckCircle className="w-3 h-3 mr-1 text-green-600" /> Confirmar
-                                </Button>
-                              )}
-                              {b.status !== "cancelled" && (
-                                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => onUpdateStatus(b.id, "cancelled")}>
-                                  <XCircle className="w-3 h-3 mr-1 text-destructive" /> Cancelar
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
+                      <div
+                        key={b.id}
+                        onClick={() => setSelectedBooking(b)}
+                        className={cn(
+                          "rounded px-1.5 py-0.5 text-[11px] leading-tight border cursor-pointer mb-0.5 truncate active:scale-95 transition-transform",
+                          getStatusColor(b.status, b.booking_date)
+                        )}
+                      >
+                        <span className="font-medium">{b.booking_time?.slice(0, 5)}</span>
+                        {" "}
+                        <span className="truncate">{b.client_name}</span>
+                      </div>
                     ))}
                   </div>
                 );
@@ -157,6 +144,47 @@ export function WeeklyCalendarView({ bookings, onUpdateStatus, isProfessional }:
           ))}
         </div>
       </div>
+
+      {/* Booking detail dialog (works on tablet/touch) */}
+      <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+        <DialogContent className="max-w-sm">
+          {selectedBooking && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedBooking.client_name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2 text-sm">
+                {selectedBooking.client_phone && <p>📞 {selectedBooking.client_phone}</p>}
+                {selectedBooking.client_email && <p>📧 {selectedBooking.client_email}</p>}
+                <p>🕐 {selectedBooking.booking_time?.slice(0, 5)} — {new Date(selectedBooking.booking_date + "T00:00:00").toLocaleDateString("pt-BR")}</p>
+                <p>💇 {(selectedBooking.services as any)?.name ?? "Sem serviço"}</p>
+                {!isProfessional && <p>👤 Prof: {(selectedBooking.professionals as any)?.name ?? "—"}</p>}
+                <Badge variant="outline">
+                  {STATUS_LABELS[selectedBooking.status] ?? selectedBooking.status}
+                </Badge>
+                <div className="flex gap-2 pt-2">
+                  {selectedBooking.status !== "confirmed" && selectedBooking.status !== "cancelled" && (
+                    <Button size="sm" variant="outline" className="gap-1" onClick={() => {
+                      onUpdateStatus(selectedBooking.id, "confirmed");
+                      setSelectedBooking(null);
+                    }}>
+                      <CheckCircle className="w-3.5 h-3.5 text-green-600" /> Confirmar
+                    </Button>
+                  )}
+                  {selectedBooking.status !== "cancelled" && (
+                    <Button size="sm" variant="outline" className="gap-1" onClick={() => {
+                      onUpdateStatus(selectedBooking.id, "cancelled");
+                      setSelectedBooking(null);
+                    }}>
+                      <XCircle className="w-3.5 h-3.5 text-red-600" /> Cancelar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

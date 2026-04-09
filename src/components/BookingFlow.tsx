@@ -29,6 +29,32 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
     try {
       const bookingDate = selectedDate.toISOString().split("T")[0];
 
+      // Check free plan booking limit (10/month)
+      if (businessId) {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
+
+        const [{ count }, { data: bizData }] = await Promise.all([
+          supabase
+            .from("bookings")
+            .select("id", { count: "exact", head: true })
+            .eq("business_id", businessId)
+            .gte("booking_date", monthStart)
+            .lte("booking_date", monthEnd)
+            .neq("status", "cancelled"),
+          supabase.from("businesses").select("featured").eq("id", businessId).single(),
+        ]);
+
+        // If not featured (no active paid plan), limit to 10
+        const isFree = !bizData?.featured;
+        if (isFree && (count ?? 0) >= 10) {
+          toast.error("Este estabelecimento atingiu o limite de agendamentos do plano gratuito.");
+          setSubmitting(false);
+          return;
+        }
+      }
+
       // Verifica se horário ainda está disponível
       const { data: existing } = await supabase
         .from("bookings")

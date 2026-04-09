@@ -6,11 +6,30 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Loader2, Sparkles, Zap } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Check, Crown, Loader2, Sparkles, Zap, Gift, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const PLANS = {
+  free: {
+    name: "Gratuito",
+    price: "0",
+    priceId: null,
+    productId: null,
+    icon: ShieldCheck,
+    features: [
+      "Até 10 agendamentos por mês",
+      "Listagem no marketplace",
+      "Agenda online básica",
+      "Painel administrativo",
+    ],
+    limitations: [
+      "Sem destaque no marketplace",
+      "Sem banner personalizado",
+      "Sem relatórios avançados",
+    ],
+  },
   basic: {
     name: "Básico",
     price: "29,90",
@@ -18,6 +37,7 @@ const PLANS = {
     productId: "prod_U5apRMMBVGaLJd",
     icon: Zap,
     features: [
+      "Agendamentos ilimitados",
       "Listagem no marketplace",
       "Agenda online completa",
       "Painel administrativo",
@@ -48,8 +68,11 @@ export default function PricingPage() {
   const { subscription, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [coupon, setCoupon] = useState("");
+  const [showCoupon, setShowCoupon] = useState(false);
 
-  const handleSubscribe = async (priceId: string, planKey: string) => {
+  const handleSubscribe = async (priceId: string | null, planKey: string) => {
+    if (!priceId) return; // free plan
     if (!user) {
       navigate("/admin/login");
       return;
@@ -57,9 +80,10 @@ export default function PricingPage() {
 
     setLoadingPlan(planKey);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
-      });
+      const body: any = { priceId };
+      if (coupon.trim()) body.coupon = coupon.trim();
+
+      const { data, error } = await supabase.functions.invoke("create-checkout", { body });
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
@@ -72,6 +96,7 @@ export default function PricingPage() {
   };
 
   const currentProductId = subscription?.product_id;
+  const isFree = !subscription?.subscribed;
 
   return (
     <div className="min-h-screen">
@@ -93,9 +118,9 @@ export default function PricingPage() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {Object.entries(PLANS).map(([key, plan], index) => {
-            const isCurrentPlan = currentProductId === plan.productId;
+            const isCurrentPlan = key === "free" ? isFree : currentProductId === plan.productId;
             const Icon = plan.icon;
 
             return (
@@ -103,7 +128,7 @@ export default function PricingPage() {
                 key={key}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.15 }}
+                transition={{ delay: index * 0.1 }}
               >
                 <Card className={`relative overflow-hidden h-full flex flex-col ${
                   key === "pro" ? "border-primary shadow-glow" : "border"
@@ -119,8 +144,14 @@ export default function PricingPage() {
                     </div>
                     <CardTitle className="text-2xl">{plan.name}</CardTitle>
                     <CardDescription>
-                      <span className="text-4xl font-bold text-foreground">R${plan.price}</span>
-                      <span className="text-muted-foreground">/mês</span>
+                      {key === "free" ? (
+                        <span className="text-4xl font-bold text-foreground">Grátis</span>
+                      ) : (
+                        <>
+                          <span className="text-4xl font-bold text-foreground">R${plan.price}</span>
+                          <span className="text-muted-foreground">/mês</span>
+                        </>
+                      )}
                     </CardDescription>
                     {isCurrentPlan && (
                       <Badge variant="outline" className="mt-2 border-primary text-primary">
@@ -136,23 +167,64 @@ export default function PricingPage() {
                           <span>{feature}</span>
                         </li>
                       ))}
+                      {"limitations" in plan && plan.limitations?.map((lim, i) => (
+                        <li key={`lim-${i}`} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="w-4 h-4 shrink-0 mt-0.5 text-center">—</span>
+                          <span>{lim}</span>
+                        </li>
+                      ))}
                     </ul>
-                    <Button
-                      className={`w-full ${key === "pro" ? "gradient-primary text-primary-foreground" : ""}`}
-                      variant={key === "pro" ? "default" : "outline"}
-                      size="lg"
-                      disabled={isCurrentPlan || loadingPlan !== null}
-                      onClick={() => handleSubscribe(plan.priceId, key)}
-                    >
-                      {loadingPlan === key && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      {isCurrentPlan ? "Plano atual" : "Assinar agora"}
-                    </Button>
+                    {key === "free" ? (
+                      <Button variant="outline" size="lg" className="w-full" disabled={isCurrentPlan}>
+                        {isCurrentPlan ? "Plano atual" : "Começar grátis"}
+                      </Button>
+                    ) : (
+                      <Button
+                        className={`w-full ${key === "pro" ? "gradient-primary text-primary-foreground" : ""}`}
+                        variant={key === "pro" ? "default" : "outline"}
+                        size="lg"
+                        disabled={isCurrentPlan || loadingPlan !== null}
+                        onClick={() => handleSubscribe(plan.priceId, key)}
+                      >
+                        {loadingPlan === key && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        {isCurrentPlan ? "Plano atual" : "Assinar agora"}
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
             );
           })}
         </div>
+
+        {/* Coupon section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="max-w-md mx-auto mt-10 text-center"
+        >
+          {!showCoupon ? (
+            <Button variant="ghost" className="gap-2 text-muted-foreground" onClick={() => setShowCoupon(true)}>
+              <Gift className="w-4 h-4" /> Tem um cupom de desconto?
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Digite seu cupom"
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+                className="text-center font-mono"
+              />
+              <Button variant="outline" onClick={() => setShowCoupon(false)}>OK</Button>
+            </div>
+          )}
+          {coupon && (
+            <p className="text-xs text-primary mt-2 flex items-center justify-center gap-1">
+              <Gift className="w-3 h-3" /> Cupom "{coupon}" será aplicado no checkout
+            </p>
+          )}
+        </motion.div>
       </div>
     </div>
   );

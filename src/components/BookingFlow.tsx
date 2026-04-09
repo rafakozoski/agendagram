@@ -35,37 +35,31 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
         const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
 
-        const [{ count }, { data: bizData }] = await Promise.all([
-          supabase
-            .from("bookings")
-            .select("id", { count: "exact", head: true })
-            .eq("business_id", businessId)
-            .gte("booking_date", monthStart)
-            .lte("booking_date", monthEnd)
-            .neq("status", "cancelled"),
+        const [{ data: countResult }, { data: bizData }] = await Promise.all([
+          supabase.rpc("count_monthly_bookings", {
+            _business_id: businessId,
+            _month_start: monthStart,
+            _month_end: monthEnd,
+          }),
           supabase.from("businesses").select("featured").eq("id", businessId).single(),
         ]);
 
-        // If not featured (no active paid plan), limit to 10
         const isFree = !bizData?.featured;
-        if (isFree && (count ?? 0) >= 10) {
+        if (isFree && (countResult ?? 0) >= 10) {
           toast.error("Este estabelecimento atingiu o limite de agendamentos do plano gratuito.");
           setSubmitting(false);
           return;
         }
       }
 
-      // Verifica se horário ainda está disponível
-      const { data: existing } = await supabase
-        .from("bookings")
-        .select("id")
-        .eq("booking_date", bookingDate)
-        .eq("booking_time", selectedTime)
-        .eq("professional_id", selectedProfessional)
-        .neq("status", "cancelled")
-        .maybeSingle();
+      // Verifica se horário ainda está disponível via função segura
+      const { data: slotAvailable } = await supabase.rpc("is_slot_available", {
+        _booking_date: bookingDate,
+        _booking_time: selectedTime,
+        _professional_id: selectedProfessional,
+      });
 
-      if (existing) {
+      if (!slotAvailable) {
         toast.error("Este horário já foi reservado. Escolha outro.");
         setSubmitting(false);
         return;

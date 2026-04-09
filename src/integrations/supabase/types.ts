@@ -489,10 +489,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_monthly_bookings: {
+        Args: { _business_id: string; _month_end: string; _month_start: string }
+        Returns: number
+      }
+      get_booked_times: {
+        Args: {
+          _booking_date: string
+          _business_id?: string
+          _professional_id?: string
+        }
+        Returns: {
+          booking_time: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: boolean
+      }
+      is_slot_available: {
+        Args: {
+          _booking_date: string
+          _booking_time: string
+          _professional_id: string
         }
         Returns: boolean
       }

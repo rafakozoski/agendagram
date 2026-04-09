@@ -37,16 +37,13 @@ export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelec
     queryKey: ["date-bookings", dateStr, businessId, professionalId],
     queryFn: async () => {
       if (!dateStr) return [];
-      let query = supabase
-        .from("bookings")
-        .select("booking_time")
-        .eq("booking_date", dateStr)
-        .neq("status", "cancelled");
-      if (businessId) query = query.eq("business_id", businessId);
-      if (professionalId) query = query.eq("professional_id", professionalId);
-      const { data, error } = await query;
+      const { data, error } = await supabase.rpc("get_booked_times", {
+        _booking_date: dateStr,
+        _business_id: businessId || null,
+        _professional_id: professionalId || null,
+      });
       if (error) throw error;
-      return data;
+      return (data || []).map((r: any) => ({ booking_time: r.booking_time }));
     },
     enabled: !!dateStr,
   });

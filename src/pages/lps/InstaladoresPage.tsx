@@ -1,4 +1,4 @@
-import { SegmentLPTemplate } from "../SegmentLPTemplate";
+import { SegmentLPTemplate } from "@/components/SegmentLPTemplate";
 import { Sparkles, CalendarClock, Globe, Users } from "lucide-react";
 
 export default function InstaladoresPage() {

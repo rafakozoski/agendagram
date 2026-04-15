@@ -89,6 +89,7 @@ export type Database = {
           client_phone: string
           created_at: string
           id: string
+          notes: string | null
           professional_id: string | null
           service_id: string | null
           status: string
@@ -102,6 +103,7 @@ export type Database = {
           client_phone: string
           created_at?: string
           id?: string
+          notes?: string | null
           professional_id?: string | null
           service_id?: string | null
           status?: string
@@ -115,6 +117,7 @@ export type Database = {
           client_phone?: string
           created_at?: string
           id?: string
+          notes?: string | null
           professional_id?: string | null
           service_id?: string | null
           status?: string

@@ -4,14 +4,18 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Check, Crown, Loader2, Zap, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 const PLANS = {
   basic: {
     name: "Básico",
-    price: "29,90",
-    priceId: "price_1T7Pe5JwkjwrgXgTJQBG5DKM",
+    monthlyPrice: "29,90",
+    yearlyPrice: "23,92",
+    monthlyPriceId: "price_1T7Pe5JwkjwrgXgTJQBG5DKM",
+    yearlyPriceId: "price_1TMHybJwkjwrgXgTGSbV9XiD",
     productId: "prod_U5apRMMBVGaLJd",
     icon: Zap,
     features: [
@@ -23,8 +27,10 @@ const PLANS = {
   },
   pro: {
     name: "Pro",
-    price: "49,90",
-    priceId: "price_1T7PecJwkjwrgXgTB9n8JMTb",
+    monthlyPrice: "49,90",
+    yearlyPrice: "39,92",
+    monthlyPriceId: "price_1T7PecJwkjwrgXgTB9n8JMTb",
+    yearlyPriceId: "price_1TMHyxJwkjwrgXgTBlLn9OhI",
     productId: "prod_U5aqds34W5m2LE",
     icon: Crown,
     features: [
@@ -40,12 +46,14 @@ export function BusinessPaymentTab() {
   const { subscription, loading: subLoading, refresh } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   const currentProductId = subscription?.product_id;
   const isSubscribed = subscription?.subscribed === true;
   const currentPlanKey = Object.entries(PLANS).find(([, p]) => p.productId === currentProductId)?.[0];
 
-  const handleSubscribe = async (priceId: string, planKey: string) => {
+  const handleSubscribe = async (plan: typeof PLANS.basic, planKey: string) => {
+    const priceId = isAnnual ? plan.yearlyPriceId : plan.monthlyPriceId;
     setLoadingPlan(planKey);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -125,11 +133,32 @@ export function BusinessPaymentTab() {
         </CardContent>
       </Card>
 
+      {/* Billing toggle */}
+      <div className="flex items-center justify-center gap-3">
+        <Label htmlFor="billing-toggle-biz" className={`text-sm font-medium ${!isAnnual ? "text-foreground" : "text-muted-foreground"}`}>
+          Mensal
+        </Label>
+        <Switch
+          id="billing-toggle-biz"
+          checked={isAnnual}
+          onCheckedChange={setIsAnnual}
+        />
+        <Label htmlFor="billing-toggle-biz" className={`text-sm font-medium ${isAnnual ? "text-foreground" : "text-muted-foreground"}`}>
+          Anual
+        </Label>
+        {isAnnual && (
+          <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+            20% OFF
+          </Badge>
+        )}
+      </div>
+
       {/* Plans */}
       <div className="grid md:grid-cols-2 gap-4">
         {Object.entries(PLANS).map(([key, plan]) => {
           const isCurrentPlan = currentProductId === plan.productId;
           const Icon = plan.icon;
+          const displayPrice = isAnnual ? plan.yearlyPrice : plan.monthlyPrice;
 
           return (
             <Card key={key} className={`relative overflow-hidden ${
@@ -148,8 +177,14 @@ export function BusinessPaymentTab() {
                   <div>
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      <span className="text-xl font-bold text-foreground">R${plan.price}</span>/mês
+                      <span className="text-xl font-bold text-foreground">R${displayPrice}</span>/mês
+                      {isAnnual && (
+                        <span className="ml-2 line-through text-xs">R${plan.monthlyPrice}</span>
+                      )}
                     </p>
+                    {isAnnual && (
+                      <p className="text-xs text-muted-foreground">Cobrado anualmente</p>
+                    )}
                   </div>
                   {isCurrentPlan && (
                     <Badge variant="outline" className="ml-auto border-primary text-primary">
@@ -171,7 +206,7 @@ export function BusinessPaymentTab() {
                   className={`w-full ${key === "pro" ? "gradient-primary text-primary-foreground" : ""}`}
                   variant={key === "pro" ? "default" : "outline"}
                   disabled={isCurrentPlan || loadingPlan !== null}
-                  onClick={() => handleSubscribe(plan.priceId, key)}
+                  onClick={() => handleSubscribe(plan, key)}
                 >
                   {loadingPlan === key && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {isCurrentPlan ? "Plano atual" : "Assinar"}

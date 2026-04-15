@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Check, Crown, Loader2, Sparkles, Zap, Gift, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -14,8 +16,10 @@ import { toast } from "sonner";
 const PLANS = {
   free: {
     name: "Gratuito",
-    price: "0",
-    priceId: null,
+    monthlyPrice: "0",
+    yearlyPrice: "0",
+    monthlyPriceId: null,
+    yearlyPriceId: null,
     productId: null,
     icon: ShieldCheck,
     features: [
@@ -32,8 +36,10 @@ const PLANS = {
   },
   basic: {
     name: "Básico",
-    price: "29,90",
-    priceId: "price_1T7Pe5JwkjwrgXgTJQBG5DKM",
+    monthlyPrice: "29,90",
+    yearlyPrice: "23,92",
+    monthlyPriceId: "price_1T7Pe5JwkjwrgXgTJQBG5DKM",
+    yearlyPriceId: "price_1TMHybJwkjwrgXgTGSbV9XiD",
     productId: "prod_U5apRMMBVGaLJd",
     icon: Zap,
     features: [
@@ -48,8 +54,10 @@ const PLANS = {
   },
   pro: {
     name: "Pro",
-    price: "49,90",
-    priceId: "price_1T7PecJwkjwrgXgTB9n8JMTb",
+    monthlyPrice: "49,90",
+    yearlyPrice: "39,92",
+    monthlyPriceId: "price_1T7PecJwkjwrgXgTB9n8JMTb",
+    yearlyPriceId: "price_1TMHyxJwkjwrgXgTBlLn9OhI",
     productId: "prod_U5aqds34W5m2LE",
     icon: Crown,
     features: [
@@ -70,9 +78,11 @@ export default function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [coupon, setCoupon] = useState("");
   const [showCoupon, setShowCoupon] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
 
-  const handleSubscribe = async (priceId: string | null, planKey: string) => {
-    if (!priceId) return; // free plan
+  const handleSubscribe = async (plan: typeof PLANS.basic, planKey: string) => {
+    const priceId = isAnnual ? plan.yearlyPriceId : plan.monthlyPriceId;
+    if (!priceId) return;
     if (!user) {
       navigate("/admin/login");
       return;
@@ -113,15 +123,36 @@ export default function PricingPage() {
           <h1 className="text-4xl font-bold mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Escolha o plano ideal para o seu negócio
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Comece a receber agendamentos online hoje mesmo. Cancele quando quiser.
           </p>
+
+          {/* Monthly/Annual toggle */}
+          <div className="flex items-center justify-center gap-3">
+            <Label htmlFor="billing-toggle" className={`text-sm font-medium ${!isAnnual ? "text-foreground" : "text-muted-foreground"}`}>
+              Mensal
+            </Label>
+            <Switch
+              id="billing-toggle"
+              checked={isAnnual}
+              onCheckedChange={setIsAnnual}
+            />
+            <Label htmlFor="billing-toggle" className={`text-sm font-medium ${isAnnual ? "text-foreground" : "text-muted-foreground"}`}>
+              Anual
+            </Label>
+            {isAnnual && (
+              <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+                20% OFF
+              </Badge>
+            )}
+          </div>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {Object.entries(PLANS).map(([key, plan], index) => {
             const isCurrentPlan = key === "free" ? isFree : currentProductId === plan.productId;
             const Icon = plan.icon;
+            const displayPrice = isAnnual ? plan.yearlyPrice : plan.monthlyPrice;
 
             return (
               <motion.div
@@ -148,11 +179,21 @@ export default function PricingPage() {
                         <span className="text-4xl font-bold text-foreground">Grátis</span>
                       ) : (
                         <>
-                          <span className="text-4xl font-bold text-foreground">R${plan.price}</span>
+                          <span className="text-4xl font-bold text-foreground">R${displayPrice}</span>
                           <span className="text-muted-foreground">/mês</span>
+                          {isAnnual && key !== "free" && (
+                            <p className="text-xs text-muted-foreground mt-1 line-through">
+                              R${plan.monthlyPrice}/mês
+                            </p>
+                          )}
                         </>
                       )}
                     </CardDescription>
+                    {isAnnual && key !== "free" && (
+                      <p className="text-xs text-muted-foreground">
+                        Cobrado anualmente
+                      </p>
+                    )}
                     {isCurrentPlan && (
                       <Badge variant="outline" className="mt-2 border-primary text-primary">
                         Seu plano atual
@@ -184,7 +225,7 @@ export default function PricingPage() {
                         variant={key === "pro" ? "default" : "outline"}
                         size="lg"
                         disabled={isCurrentPlan || loadingPlan !== null}
-                        onClick={() => handleSubscribe(plan.priceId, key)}
+                        onClick={() => handleSubscribe(plan as typeof PLANS.basic, key)}
                       >
                         {loadingPlan === key && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         {isCurrentPlan ? "Plano atual" : "Assinar agora"}

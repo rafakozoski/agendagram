@@ -17,7 +17,7 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
   const [selectedProfessional, setSelectedProfessional] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [clientInfo, setClientInfo] = useState({ name: "", email: "", phone: "" });
+  const [clientInfo, setClientInfo] = useState({ name: "", email: "", phone: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));

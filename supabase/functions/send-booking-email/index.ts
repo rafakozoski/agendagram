@@ -34,24 +34,73 @@ serve(async (req) => {
   }
 
   try {
-    const {
-      client_name,
-      client_email,
-      service_name,
-      professional_name,
-      booking_date,
-      booking_time,
-      business_name,
-      price,
-      business_id,
-    } = await req.json();
+    const { booking_id } = await req.json();
 
-    if (!client_email) {
-      return new Response(JSON.stringify({ error: "client_email obrigatório" }), {
+    if (!booking_id || typeof booking_id !== "string") {
+      return new Response(JSON.stringify({ error: "booking_id obrigatório" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(booking_id)) {
+      return new Response(JSON.stringify({ error: "booking_id inválido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Look up booking server-side — only allow emails for bookings created in the last 2 minutes
+    const { data: booking, error: bookingError } = await supabase
+      .from("bookings")
+      .select("client_name, client_email, client_phone, booking_date, booking_time, service_id, professional_id, business_id, created_at")
+      .eq("id", booking_id)
+      .single();
+
+    if (bookingError || !booking) {
+      return new Response(JSON.stringify({ error: "Agendamento não encontrado" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Only send emails for bookings created in the last 2 minutes
+    const createdAt = new Date(booking.created_at).getTime();
+    const now = Date.now();
+    if (now - createdAt > 2 * 60 * 1000) {
+      return new Response(JSON.stringify({ error: "Agendamento expirado para envio de email" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fetch related data
+    const [serviceResult, professionalResult, businessResult] = await Promise.all([
+      booking.service_id
+        ? supabase.from("services").select("name, price").eq("id", booking.service_id).single()
+        : Promise.resolve({ data: null }),
+      booking.professional_id
+        ? supabase.from("professionals").select("name").eq("id", booking.professional_id).single()
+        : Promise.resolve({ data: null }),
+      booking.business_id
+        ? supabase.from("businesses").select("name, owner_id").eq("id", booking.business_id).single()
+        : Promise.resolve({ data: null }),
+    ]);
+
+    const client_name = booking.client_name;
+    const client_email = booking.client_email;
+    const service_name = serviceResult.data?.name;
+    const professional_name = professionalResult.data?.name;
+    const business_name = businessResult.data?.name;
+    const price = serviceResult.data?.price;
+    const booking_date = booking.booking_date;
+    const booking_time = booking.booking_time;
 
     const formattedDate = new Date(booking_date + "T00:00:00").toLocaleDateString("pt-BR", {
       weekday: "long",
@@ -223,30 +272,18 @@ serve(async (req) => {
       clientHtml
     );
 
-    // Envia email ao estabelecimento (busca email do owner)
-    if (business_id) {
+    // Envia email ao estabelecimento
+    if (businessResult.data?.owner_id) {
       try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        const { data: userData } = await supabase.auth.admin.getUserById(businessResult.data.owner_id);
+        const ownerEmail = userData?.user?.email;
 
-        const { data: business } = await supabase
-          .from("businesses")
-          .select("owner_id")
-          .eq("id", business_id)
-          .single();
-
-        if (business?.owner_id) {
-          const { data: userData } = await supabase.auth.admin.getUserById(business.owner_id);
-          const ownerEmail = userData?.user?.email;
-
-          if (ownerEmail) {
-            await sendEmail(
-              ownerEmail,
-              `📅 Novo agendamento — ${client_name} | ${service_name || "Agendagram"}`,
-              businessHtml
-            );
-          }
+        if (ownerEmail) {
+          await sendEmail(
+            ownerEmail,
+            `📅 Novo agendamento — ${client_name} | ${service_name || "Agendagram"}`,
+            businessHtml
+          );
         }
       } catch (bizErr) {
         console.warn("Erro ao enviar email ao estabelecimento:", bizErr);

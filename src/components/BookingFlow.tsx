@@ -66,7 +66,9 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
       }
 
       // Insere o agendamento
-      const { data: insertedBooking, error } = await supabase.from("bookings").insert({
+      const bookingId = crypto.randomUUID();
+      const { error } = await supabase.from("bookings").insert({
+        id: bookingId,
         client_name: clientInfo.name,
         client_email: clientInfo.email,
         client_phone: clientInfo.phone,
@@ -77,13 +79,13 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
         booking_time: selectedTime,
         status: "pending",
         business_id: businessId ?? null,
-      }).select("id").single();
+      });
       if (error) throw error;
 
       // Dispara email de confirmação passando apenas o booking_id
       supabase.functions
         .invoke("send-booking-email", {
-          body: { booking_id: insertedBooking.id },
+          body: { booking_id: bookingId },
         })
         .catch((err) => console.warn("Email não enviado:", err));
 

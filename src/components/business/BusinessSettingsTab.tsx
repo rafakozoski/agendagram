@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X, UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useLocations } from "@/hooks/useLocations";
+import { LocationSelector } from "@/components/LocationSelector";
 
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -53,11 +54,9 @@ export function BusinessSettingsTab() {
     }
   }, [business]);
 
-  const { states: dbStates, getCities, getNeighborhoods: getDbNeighborhoods, findStateByCity: dbFindState, getAllCitiesWithState } = useLocations();
-  const citiesToShow = form.state ? getCities(form.state).map(c => ({ city: c, stateKey: form.state, stateName: dbStates.find(s => s.code === form.state)?.name || "" })) : getAllCitiesWithState();
-  const selectedNeighborhoods = (form.state && form.city)
-    ? getDbNeighborhoods(form.city, form.state)
-    : [];
+  // dbStates é usado apenas para converter code <-> name na persistência
+  // (a tabela businesses guarda o NOME do estado por extenso).
+  const { states: dbStates } = useLocations();
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -360,61 +359,15 @@ export function BusinessSettingsTab() {
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(11) 99999-9999" />
             </div>
 
-            {/* Estado */}
-            <div>
-              <Label>Estado</Label>
-              <Select
-                value={form.state}
-                onValueChange={(v) => setForm({ ...form, state: v, city: "", neighborhood: "" })}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione o estado" /></SelectTrigger>
-                <SelectContent>
-                  {dbStates.map((s) => (
-                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Localização — Estado/Cidade dropdown + Bairro livre com sugestões */}
+            <div className="md:col-span-2">
+              <LocationSelector
+                value={{ state: form.state, city: form.city, neighborhood: form.neighborhood }}
+                onChange={(loc) => setForm({ ...form, state: loc.state, city: loc.city, neighborhood: loc.neighborhood })}
+              />
             </div>
 
-            {/* Cidade */}
-            <div>
-              <Label>Cidade</Label>
-              <Select
-                value={form.city}
-                onValueChange={(v) => {
-                  const stateKey = dbFindState(v);
-                  setForm({ ...form, city: v, neighborhood: "", state: stateKey || form.state });
-                }}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
-                <SelectContent>
-                  {citiesToShow.map((c) => (
-                    <SelectItem key={`${c.stateKey}-${c.city}`} value={c.city}>
-                      {c.city} {!form.state && `(${c.stateKey})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Bairro */}
-            <div>
-              <Label>Bairro</Label>
-              <Select
-                value={form.neighborhood}
-                onValueChange={(v) => setForm({ ...form, neighborhood: v })}
-                disabled={!form.city}
-              >
-                <SelectTrigger><SelectValue placeholder={form.city ? "Selecione o bairro" : "Escolha a cidade primeiro"} /></SelectTrigger>
-                <SelectContent>
-                  {selectedNeighborhoods.map((n) => (
-                    <SelectItem key={n} value={n}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
+            <div className="md:col-span-2">
               <Label>Endereço</Label>
               <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua, número" />
             </div>

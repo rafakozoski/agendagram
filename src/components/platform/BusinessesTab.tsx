@@ -15,10 +15,12 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocations } from "@/hooks/useLocations";
+import { LocationSelector } from "@/components/LocationSelector";
 
 export function BusinessesTab() {
   const { user } = useAuth();
-  const { states, getCities, getNeighborhoods, findStateByCity, getAllCitiesWithState } = useLocations();
+  // states usado apenas para conversão code <-> name (persistência guarda nome).
+  const { states } = useLocations();
   const queryClient = useQueryClient();
   const [editBiz, setEditBiz] = useState<any>(null);
   const [showNewBiz, setShowNewBiz] = useState(false);
@@ -290,42 +292,11 @@ export function BusinessesTab() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Estado</Label>
-              <Select value={bizForm.state} onValueChange={(v) => setBizForm({ ...bizForm, state: v, city: "", neighborhood: "" })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {states.map((s) => (
-                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Cidade</Label>
-              <Select value={bizForm.city} onValueChange={(v) => {
-                const sk = findStateByCity(v);
-                setBizForm({ ...bizForm, city: v, neighborhood: "", state: sk || bizForm.state });
-              }}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {(bizForm.state ? getCities(bizForm.state) : getAllCitiesWithState().map(c => c.city)).map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Bairro</Label>
-              <Select value={bizForm.neighborhood} onValueChange={(v) => setBizForm({ ...bizForm, neighborhood: v })} disabled={!bizForm.city}>
-                <SelectTrigger><SelectValue placeholder={bizForm.city ? "Selecione" : "Escolha a cidade"} /></SelectTrigger>
-                <SelectContent>
-                  {getNeighborhoods(bizForm.city, bizForm.state).map((n) => (
-                    <SelectItem key={n} value={n}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <LocationSelector
+              compact
+              value={{ state: bizForm.state, city: bizForm.city, neighborhood: bizForm.neighborhood }}
+              onChange={(loc) => setBizForm({ ...bizForm, state: loc.state, city: loc.city, neighborhood: loc.neighborhood })}
+            />
             <div>
               <Label>Telefone</Label>
               <Input value={bizForm.phone} onChange={(e) => setBizForm({ ...bizForm, phone: e.target.value })} />
@@ -381,42 +352,11 @@ export function BusinessesTab() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Estado</Label>
-              <Select value={bizForm.state} onValueChange={(v) => setBizForm({ ...bizForm, state: v, city: "", neighborhood: "" })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {states.map((s) => (
-                    <SelectItem key={s.code} value={s.code}>{s.name} ({s.code})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Cidade</Label>
-              <Select value={bizForm.city} onValueChange={(v) => {
-                const sk = findStateByCity(v);
-                setBizForm({ ...bizForm, city: v, neighborhood: "", state: sk || bizForm.state });
-              }}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {(bizForm.state ? getCities(bizForm.state) : getAllCitiesWithState().map(c => c.city)).map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Bairro</Label>
-              <Select value={bizForm.neighborhood} onValueChange={(v) => setBizForm({ ...bizForm, neighborhood: v })} disabled={!bizForm.city}>
-                <SelectTrigger><SelectValue placeholder={bizForm.city ? "Selecione" : "Escolha a cidade"} /></SelectTrigger>
-                <SelectContent>
-                  {getNeighborhoods(bizForm.city, bizForm.state).map((n) => (
-                    <SelectItem key={n} value={n}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <LocationSelector
+              compact
+              value={{ state: bizForm.state, city: bizForm.city, neighborhood: bizForm.neighborhood }}
+              onChange={(loc) => setBizForm({ ...bizForm, state: loc.state, city: loc.city, neighborhood: loc.neighborhood })}
+            />
             <div>
               <Label>Telefone</Label>
               <Input value={bizForm.phone} onChange={(e) => setBizForm({ ...bizForm, phone: e.target.value })} />

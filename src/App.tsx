@@ -47,19 +47,22 @@ import InstaladoresPage from "./pages/lps/InstaladoresPage";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
-
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/admin/login" replace />;
   if (!isAdmin) return <Navigate to="/painel" replace />;
+  return <>{children}</>;
+}
+
+// Painel do dono do negócio: exige role owner OU admin (admin pode operar negócio próprio)
+function OwnerRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { isAdmin, isOwner, loading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isOwner && !isAdmin) return <Navigate to="/contratar" replace />;
   return <>{children}</>;
 }
 
@@ -77,7 +80,7 @@ const App = () => (
           <Route path="/login" element={<AuthPage />} />
           <Route path="/admin/login" element={<AuthPage />} />
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
-          <Route path="/painel" element={<ProtectedRoute><BusinessPanel /></ProtectedRoute>} />
+          <Route path="/painel" element={<OwnerRoute><BusinessPanel /></OwnerRoute>} />
                     <Route path="/sistema-de-agendamento-para-salao-de-beleza" element={<SalaoBelezaPage />} />
           <Route path="/sistema-de-agendamento-para-barbearia" element={<BarbeariaPage />} />
           <Route path="/sistema-de-agendamento-para-manicure" element={<ManicurePage />} />

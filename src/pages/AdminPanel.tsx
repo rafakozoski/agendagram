@@ -1,22 +1,22 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarCheck, Settings, Store, Package, Users, ListChecks, Image, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
-import { AdminSettingsTab } from "@/components/admin/AdminSettingsTab";
-import { BookingsTab } from "@/components/admin/BookingsTab";
-import { BusinessesTab } from "@/components/admin/BusinessesTab";
-import { UsersTab } from "@/components/admin/UsersTab";
-import { ServiceCatalogTab } from "@/components/admin/ServiceCatalogTab";
-import { BannersTab } from "@/components/admin/BannersTab";
-import { SalesTab } from "@/components/admin/SalesTab";
+import { AdminSettingsTab } from "@/components/platform/AdminSettingsTab";
+import { BookingsTab } from "@/components/platform/BookingsTab";
+import { BusinessesTab } from "@/components/platform/BusinessesTab";
+import { UsersTab } from "@/components/platform/UsersTab";
+import { ServiceCatalogTab } from "@/components/platform/ServiceCatalogTab";
+import { BannersTab } from "@/components/platform/BannersTab";
+import { SalesTab } from "@/components/platform/SalesTab";
 
 export default function AdminPanel() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-6 py-10">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-bold mb-2">Painel Administrativo</h1>
+          <h1 className="text-3xl font-bold mb-2">Administração da Plataforma</h1>
           <p className="text-muted-foreground mb-8">
-            Gestão global da plataforma Agendagram
+            Gestão global do Agendagram — empresas, usuários, vendas e configurações da plataforma
           </p>
         </motion.div>
 

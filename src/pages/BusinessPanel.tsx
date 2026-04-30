@@ -3,10 +3,10 @@ import { CalendarCheck, Store, CreditCard, User, Building2, Users } from "lucide
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BusinessSettingsTab } from "@/components/admin/BusinessSettingsTab";
-import { BusinessBookingsTab } from "@/components/admin/BusinessBookingsTab";
-import { BusinessPaymentTab } from "@/components/admin/BusinessPaymentTab";
-import { ClientsTab } from "@/components/admin/ClientsTab";
+import { BusinessSettingsTab } from "@/components/business/BusinessSettingsTab";
+import { BusinessBookingsTab } from "@/components/business/BusinessBookingsTab";
+import { BusinessPaymentTab } from "@/components/business/BusinessPaymentTab";
+import { ClientsTab } from "@/components/business/ClientsTab";
 import { useMyBusiness } from "@/hooks/useMyBusiness";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -23,10 +23,10 @@ export default function BusinessPanel() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold mb-1">
-                {isProfessional ? "Minha Agenda" : "Meu Negócio"}
+                {isProfessional ? "Minha Agenda" : "Painel do Negócio"}
               </h1>
               <p className="text-muted-foreground">
-                {isProfessional ? "Gerencie seus agendamentos" : "Gerencie seu negócio"}
+                {isProfessional ? "Gerencie seus agendamentos" : "Administre sua empresa, agenda, clientes e pagamentos"}
               </p>
             </div>
             <div className="flex items-center gap-3 flex-wrap">

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, MapPin, Star, ArrowRight, Sparkles, Scissors, Heart, Car, PawPrint } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,10 +10,7 @@ import { BannerCarousel } from "@/components/BannerCarousel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const ICON_MAP: Record<string, any> = {
-  Sparkles, Scissors, Heart, Car, PawPrint,
-};
+import { Footer } from "@/components/Footer";
 
 export default function Index() {
   const [search, setSearch] = useState("");
@@ -125,16 +122,14 @@ export default function Index() {
               Todos
             </Button>
             {categories.map((cat) => {
-              const Icon = ICON_MAP[cat.icon] || Sparkles;
               return (
                 <Button
                   key={cat.id}
                   variant={activeCategory === cat.slug ? "default" : "outline"}
                   size="sm"
-                  className="rounded-full gap-2"
+                  className="rounded-full"
                   onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)}
                 >
-                  <Icon className="w-4 h-4" />
                   {cat.name}
                 </Button>
               );
@@ -151,7 +146,6 @@ export default function Index() {
         <section className="py-12 px-6">
           <div className="container mx-auto">
             <div className="flex items-center gap-2 mb-6">
-              <Star className="w-5 h-5 text-accent" />
               <h2 className="text-2xl font-bold">Destaques</h2>
               <Badge variant="secondary" className="ml-2">Patrocinado</Badge>
             </div>
@@ -196,7 +190,8 @@ export default function Index() {
       </section>
 
       {/* Banner bottom */}
-      <BannerCarousel position="bottom" halfHeight />
+      <BannerCarousel position="bottom" />
+      <Footer />
     </div>
   );
 }

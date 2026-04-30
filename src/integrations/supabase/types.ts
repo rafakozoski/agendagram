@@ -53,6 +53,7 @@ export type Database = {
         Row: {
           created_at: string | null
           enabled: boolean | null
+          half_height: boolean
           id: string
           image_url: string
           link_url: string | null
@@ -62,6 +63,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           enabled?: boolean | null
+          half_height?: boolean
           id?: string
           image_url: string
           link_url?: string | null
@@ -71,6 +73,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           enabled?: boolean | null
+          half_height?: boolean
           id?: string
           image_url?: string
           link_url?: string | null
@@ -161,6 +164,16 @@ export type Database = {
           neighborhood: string | null
           owner_id: string | null
           phone: string | null
+          site_about: string | null
+          site_cta_label: string | null
+          site_enabled: boolean
+          site_features: Json
+          site_gallery: Json
+          site_headline: string | null
+          site_instagram: string | null
+          site_subheadline: string | null
+          site_testimonials: Json
+          site_whatsapp: string | null
           slug: string
           state: string | null
         }
@@ -178,6 +191,16 @@ export type Database = {
           neighborhood?: string | null
           owner_id?: string | null
           phone?: string | null
+          site_about?: string | null
+          site_cta_label?: string | null
+          site_enabled?: boolean
+          site_features?: Json
+          site_gallery?: Json
+          site_headline?: string | null
+          site_instagram?: string | null
+          site_subheadline?: string | null
+          site_testimonials?: Json
+          site_whatsapp?: string | null
           slug: string
           state?: string | null
         }
@@ -195,6 +218,16 @@ export type Database = {
           neighborhood?: string | null
           owner_id?: string | null
           phone?: string | null
+          site_about?: string | null
+          site_cta_label?: string | null
+          site_enabled?: boolean
+          site_features?: Json
+          site_gallery?: Json
+          site_headline?: string | null
+          site_instagram?: string | null
+          site_subheadline?: string | null
+          site_testimonials?: Json
+          site_whatsapp?: string | null
           slug?: string
           state?: string | null
         }

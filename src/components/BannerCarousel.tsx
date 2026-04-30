@@ -1,16 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Link } from "react-router-dom";
 import { Crown } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
 
 interface BannerCarouselProps {
   position: "top" | "middle" | "bottom";
-  halfHeight?: boolean;
 }
 
-export function BannerCarousel({ position, halfHeight = false }: BannerCarouselProps) {
+export function BannerCarousel({ position }: BannerCarouselProps) {
   const { data: banners = [] } = useQuery({
     queryKey: ["banners", position],
     queryFn: async () => {
@@ -44,21 +43,17 @@ export function BannerCarousel({ position, halfHeight = false }: BannerCarouselP
     return null;
   }
 
-  const maxH = halfHeight ? "max-h-32" : "max-h-64";
-
   const content = banners.length === 1 ? (
-    <BannerImage banner={banners[0]} maxH={maxH} />
+    <BannerImage banner={banners[0]} />
   ) : (
     <Carousel opts={{ loop: true }} plugins={[Autoplay({ delay: 5000, stopOnInteraction: false })]} className="w-full">
       <CarouselContent>
         {banners.map((banner) => (
           <CarouselItem key={banner.id}>
-            <BannerImage banner={banner} maxH={maxH} />
+            <BannerImage banner={banner} />
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious className="left-2" />
-      <CarouselNext className="right-2" />
     </Carousel>
   );
 
@@ -69,7 +64,8 @@ export function BannerCarousel({ position, halfHeight = false }: BannerCarouselP
   );
 }
 
-function BannerImage({ banner, maxH = "max-h-64" }: { banner: any; maxH?: string }) {
+function BannerImage({ banner }: { banner: any }) {
+  const maxH = banner.half_height ? "max-h-32" : "max-h-64";
   const img = (
     <img
       src={banner.image_url}

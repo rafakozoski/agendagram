@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarCheck, Store, CreditCard, User, Building2, Users } from "lucide-react";
+import { CalendarCheck, Store, CreditCard, User, Building2, Users, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +7,7 @@ import { BusinessSettingsTab } from "@/components/business/BusinessSettingsTab";
 import { BusinessBookingsTab } from "@/components/business/BusinessBookingsTab";
 import { BusinessPaymentTab } from "@/components/business/BusinessPaymentTab";
 import { ClientsTab } from "@/components/business/ClientsTab";
+import { BusinessSiteTab } from "@/components/business/BusinessSiteTab";
 import { useMyBusiness } from "@/hooks/useMyBusiness";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -71,6 +72,10 @@ export default function BusinessPanel() {
                   <Store className="w-4 h-4" />
                   Minha Empresa
                 </TabsTrigger>
+                <TabsTrigger value="site" className="gap-2">
+                  <Globe className="w-4 h-4" />
+                  Mini-site
+                </TabsTrigger>
                 <TabsTrigger value="payments" className="gap-2">
                   <CreditCard className="w-4 h-4" />
                   Pagamentos
@@ -90,6 +95,9 @@ export default function BusinessPanel() {
               </TabsContent>
               <TabsContent value="business">
                 <BusinessSettingsTab />
+              </TabsContent>
+              <TabsContent value="site">
+                <BusinessSiteTab />
               </TabsContent>
               <TabsContent value="payments">
                 <BusinessPaymentTab />

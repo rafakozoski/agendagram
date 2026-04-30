@@ -2,10 +2,12 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BookingFlow } from "@/components/BookingFlow";
-import { ArrowLeft, MapPin, Phone, Star, Clock, Sparkles } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Star, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BusinessSite } from "@/components/business/BusinessSite";
+import { Footer } from "@/components/Footer";
 
 export default function BusinessPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -193,9 +195,7 @@ export default function BusinessPage() {
               {/* Team */}
               {professionals.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-primary" /> Nossa Equipe
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Nossa Equipe</h3>
                   <div className="flex flex-wrap gap-2">
                     {professionals.map((p) => (
                       <div
@@ -222,9 +222,7 @@ export default function BusinessPage() {
               {/* Services preview */}
               {services.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-primary" /> Serviços
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Serviços</h3>
                   <div className="flex flex-wrap gap-2">
                     {services.slice(0, 8).map((s) => (
                       <Badge key={s.id} variant="secondary" className="text-xs">
@@ -250,6 +248,8 @@ export default function BusinessPage() {
       )}
 
       <BookingFlow businessId={business.id} />
+      <BusinessSite business={business as any} />
+      <Footer />
     </div>
   );
 }

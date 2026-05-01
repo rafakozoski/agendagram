@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Instagram, MessageCircle, Quote, CheckCircle2 } from "lucide-react";
+import { Instagram, MessageCircle, Quote, CheckCircle2, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface BusinessSiteProps {
@@ -19,6 +19,8 @@ export function BusinessSite({ business }: BusinessSiteProps) {
   const whatsapp = (business.site_whatsapp || "").replace(/\D/g, "");
   const instagram = (business.site_instagram || "").replace(/^@/, "");
 
+  const scrollToBooking = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
   return (
     <section className="border-t bg-card">
       <div className="container mx-auto px-6 py-14">
@@ -34,7 +36,7 @@ export function BusinessSite({ business }: BusinessSiteProps) {
           <Button
             size="lg"
             className="mt-6 gradient-primary text-primary-foreground"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={scrollToBooking}
           >
             {ctaLabel}
           </Button>
@@ -45,6 +47,16 @@ export function BusinessSite({ business }: BusinessSiteProps) {
             <p className="text-base text-foreground/80 whitespace-pre-line leading-relaxed text-center">
               {about}
             </p>
+            <div className="flex justify-center mt-6">
+              <Button
+                size="lg"
+                className="gradient-primary text-primary-foreground shadow-glow"
+                onClick={scrollToBooking}
+              >
+                <ArrowUp className="w-4 h-4 mr-2" />
+                {ctaLabel}
+              </Button>
+            </div>
           </div>
         )}
 

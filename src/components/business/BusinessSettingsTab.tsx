@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyBusiness } from "@/hooks/useMyBusiness";
@@ -13,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X, UserPlus, UserCheck } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, Store, Users, Package, Clock, ImagePlus, X, UserPlus, UserCheck, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { useLocations } from "@/hooks/useLocations";
 import { LocationSelector } from "@/components/LocationSelector";
@@ -61,15 +62,26 @@ export function BusinessSettingsTab() {
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!business?.id) {
+      toast.error("Salve os dados da empresa antes de enviar o banner.");
+      return;
+    }
     if (file.size > 3 * 1024 * 1024) {
       toast.error("Imagem muito grande. Máximo 3MB.");
       return;
     }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Formato não suportado. Use JPG, PNG ou WEBP.");
+      return;
+    }
     setUploadingBanner(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `banners/${user!.id}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("business-assets").upload(path, file, { upsert: true });
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      // Path obrigatoriamente prefixado por business.id (RLS de business-assets exige isso)
+      const path = `${business.id}/banner-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("business-assets")
+        .upload(path, file, { upsert: true, contentType: file.type });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("business-assets").getPublicUrl(path);
       setForm((f) => ({ ...f, cover_url: data.publicUrl }));
@@ -321,10 +333,19 @@ export function BusinessSettingsTab() {
               />
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-border p-4 flex items-center gap-3 text-muted-foreground">
-              <ImagePlus className="w-5 h-5 shrink-0" />
-              <p className="text-sm">O banner de topo está disponível apenas para planos <strong className="text-foreground">Pro (Destaque)</strong>.</p>
-            </div>
+            <Link
+              to="/planos"
+              className="block rounded-xl border border-dashed border-border p-4 hover:border-primary hover:bg-primary/5 transition-colors group"
+            >
+              <div className="flex items-center gap-3 text-muted-foreground group-hover:text-foreground">
+                <ImagePlus className="w-5 h-5 shrink-0" />
+                <p className="text-sm flex-1">
+                  O banner de topo está disponível apenas para planos{" "}
+                  <strong className="text-foreground">Pro (Destaque)</strong>.{" "}
+                  <span className="text-primary group-hover:underline">Conheça os planos →</span>
+                </p>
+              </div>
+            </Link>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -545,7 +566,16 @@ function ProfessionalsSection({ business, professionals, addProfessional, update
         </CardHeader>
         <CardContent className="space-y-3">
           {professionals.map((pro: any) => (
-            <div key={pro.id} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 rounded-lg border items-end">
+            <div
+              key={pro.id}
+              className="flex flex-col md:grid md:grid-cols-[auto_1fr_1fr_1fr_1fr_auto] gap-3 p-3 rounded-lg border md:items-end"
+            >
+              <ProfessionalAvatarUpload
+                pro={pro}
+                business={business}
+                onUploaded={(url) => updateProfessional.mutate({ id: pro.id, updates: { avatar_url: url } })}
+                onCleared={() => updateProfessional.mutate({ id: pro.id, updates: { avatar_url: null } })}
+              />
               <div>
                 <Label>Nome</Label>
                 <Input defaultValue={pro.name} onBlur={(e) => updateProfessional.mutate({ id: pro.id, updates: { name: e.target.value } })} />
@@ -636,5 +666,103 @@ function ProfessionalsSection({ business, professionals, addProfessional, update
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+// Avatar circular clicável para upload da foto do profissional.
+// Usa o mesmo bucket business-assets, com path prefixado por business.id (RLS).
+function ProfessionalAvatarUpload({
+  pro,
+  business,
+  onUploaded,
+  onCleared,
+}: {
+  pro: any;
+  business: any;
+  onUploaded: (url: string) => void;
+  onCleared: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!business?.id) {
+      toast.error("Salve os dados da empresa antes de enviar fotos.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Foto muito grande. Máximo 2MB.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Use JPG, PNG ou WEBP.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${business.id}/professionals/${pro.id}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("business-assets")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      const { data } = supabase.storage.from("business-assets").getPublicUrl(path);
+      onUploaded(data.publicUrl);
+      toast.success("Foto atualizada!");
+    } catch (err: any) {
+      toast.error("Erro ao enviar foto: " + (err.message || ""));
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="relative w-16 h-16 rounded-full border-2 border-border hover:border-primary overflow-hidden transition-colors group"
+          title={pro.avatar_url ? "Trocar foto" : "Adicionar foto"}
+        >
+          {pro.avatar_url ? (
+            <img src={pro.avatar_url} alt={pro.name || "Profissional"} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+              {pro.name?.charAt(0)?.toUpperCase() || "?"}
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            {uploading ? (
+              <Loader2 className="w-5 h-5 text-white animate-spin" />
+            ) : (
+              <Camera className="w-5 h-5 text-white" />
+            )}
+          </div>
+        </button>
+        {pro.avatar_url && !uploading && (
+          <button
+            type="button"
+            onClick={onCleared}
+            className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/80 transition-colors"
+            title="Remover foto"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleUpload}
+      />
+      <span className="text-[10px] text-muted-foreground">Foto</span>
+    </div>
   );
 }

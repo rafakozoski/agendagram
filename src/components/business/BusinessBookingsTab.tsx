@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2, List, CalendarDays } from "lucide-react";
+import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2, List, CalendarDays, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ManualBookingDialog } from "./ManualBookingDialog";
@@ -173,63 +173,150 @@ export function BusinessBookingsTab() {
           ) : filtered.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nenhuma reserva encontrada.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Serviço</TableHead>
-                    {!isProfessional && <TableHead>Profissional</TableHead>}
-                    <TableHead>Data/Hora</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{booking.client_name}</p>
-                          <p className="text-xs text-muted-foreground">{booking.client_email}</p>
-                          <p className="text-xs text-muted-foreground">{booking.client_phone}</p>
+            <>
+              {/* Mobile: cards (mais 'app-like' para uso rápido no celular) */}
+              <div className="space-y-3 md:hidden">
+                {filtered.map((booking) => {
+                  const phoneClean = (booking.client_phone || "").replace(/\D/g, "");
+                  return (
+                    <div key={booking.id} className="rounded-xl border bg-card p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold truncate">{booking.client_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{(booking.services as any)?.name ?? "—"}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>{(booking.services as any)?.name ?? "—"}</TableCell>
-                      {!isProfessional && <TableCell>{(booking.professionals as any)?.name ?? "—"}</TableCell>}
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                          {new Date(booking.booking_date + "T00:00:00").toLocaleDateString("pt-BR")}
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />{booking.booking_time}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={STATUS_MAP[booking.status]?.variant ?? "outline"}>
+                        <Badge variant={STATUS_MAP[booking.status]?.variant ?? "outline"} className="shrink-0">
                           {STATUS_MAP[booking.status]?.label ?? booking.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
+                      </div>
+
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="flex items-center gap-1 font-medium tabular-nums">
+                          <Calendar className="w-3.5 h-3.5 text-primary" />
+                          {new Date(booking.booking_date + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                        </span>
+                        <span className="flex items-center gap-1 font-medium tabular-nums">
+                          <Clock className="w-3.5 h-3.5 text-primary" />
+                          {booking.booking_time?.slice(0, 5)}
+                        </span>
+                        {!isProfessional && (booking.professionals as any)?.name && (
+                          <span className="text-xs text-muted-foreground truncate">
+                            · {(booking.professionals as any).name}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {phoneClean && (
+                          <a href={`tel:${phoneClean}`} className="flex-1 min-w-[40%]">
+                            <Button variant="outline" size="sm" className="w-full gap-1.5">
+                              <Phone className="w-3.5 h-3.5" />
+                              <span className="truncate">{booking.client_phone}</span>
+                            </Button>
+                          </a>
+                        )}
+                        {phoneClean && (
+                          <a
+                            href={`https://wa.me/55${phoneClean}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 min-w-[40%]"
+                          >
+                            <Button variant="outline" size="sm" className="w-full gap-1.5">
+                              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                            </Button>
+                          </a>
+                        )}
+                      </div>
+
+                      {(booking.status !== "confirmed" || booking.status !== "cancelled") && (
+                        <div className="flex gap-2">
                           {booking.status !== "confirmed" && booking.status !== "cancelled" && (
-                            <Button size="icon" variant="ghost" onClick={() => updateStatus.mutate({ id: booking.id, status: "confirmed" })} title="Confirmar">
-                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="flex-1 gap-1"
+                              onClick={() => updateStatus.mutate({ id: booking.id, status: "confirmed" })}
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" /> Confirmar
                             </Button>
                           )}
                           {booking.status !== "cancelled" && (
-                            <Button size="icon" variant="ghost" onClick={() => updateStatus.mutate({ id: booking.id, status: "cancelled" })} title="Cancelar">
-                              <XCircle className="w-4 h-4 text-destructive" />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 gap-1 text-destructive hover:text-destructive"
+                              onClick={() => updateStatus.mutate({ id: booking.id, status: "cancelled" })}
+                            >
+                              <XCircle className="w-3.5 h-3.5" /> Cancelar
                             </Button>
                           )}
                         </div>
-                      </TableCell>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop: tabela completa */}
+              <div className="overflow-x-auto hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Serviço</TableHead>
+                      {!isProfessional && <TableHead>Profissional</TableHead>}
+                      <TableHead>Data/Hora</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{booking.client_name}</p>
+                            <p className="text-xs text-muted-foreground">{booking.client_email}</p>
+                            <p className="text-xs text-muted-foreground">{booking.client_phone}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{(booking.services as any)?.name ?? "—"}</TableCell>
+                        {!isProfessional && <TableCell>{(booking.professionals as any)?.name ?? "—"}</TableCell>}
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm">
+                            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                            {new Date(booking.booking_date + "T00:00:00").toLocaleDateString("pt-BR")}
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />{booking.booking_time}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={STATUS_MAP[booking.status]?.variant ?? "outline"}>
+                            {STATUS_MAP[booking.status]?.label ?? booking.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {booking.status !== "confirmed" && booking.status !== "cancelled" && (
+                              <Button size="icon" variant="ghost" onClick={() => updateStatus.mutate({ id: booking.id, status: "confirmed" })} title="Confirmar">
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                              </Button>
+                            )}
+                            {booking.status !== "cancelled" && (
+                              <Button size="icon" variant="ghost" onClick={() => updateStatus.mutate({ id: booking.id, status: "cancelled" })} title="Cancelar">
+                                <XCircle className="w-4 h-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

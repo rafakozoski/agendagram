@@ -26,14 +26,17 @@ export function BusinessSettingsTab() {
   const { business, isLoading: bizLoading, refetch: refetchBiz, ownedBusinesses } = useMyBusiness();
   const queryClient = useQueryClient();
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: "", slug: "", description: "", category: "beleza",
     state: "", city: "", neighborhood: "", address: "", phone: "",
-    cover_url: "",
+    cover_url: "", logo_url: "",
   });
   const [bannerPreview, setBannerPreview] = useState<string>("");
+  const [logoPreview, setLogoPreview] = useState<string>("");
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     if (business) {
@@ -50,8 +53,10 @@ export function BusinessSettingsTab() {
         address: b.address || "",
         phone: b.phone || "",
         cover_url: b.cover_url || "",
+        logo_url: b.logo_url || "",
       });
       if (b.cover_url) setBannerPreview(b.cover_url);
+      if (b.logo_url) setLogoPreview(b.logo_url);
     }
   }, [business]);
 
@@ -97,6 +102,45 @@ export function BusinessSettingsTab() {
   const removeBanner = () => {
     setForm((f) => ({ ...f, cover_url: "" }));
     setBannerPreview("");
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!business?.id) {
+      toast.error("Salve os dados da empresa antes de enviar a logo.");
+      return;
+    }
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("Logo muito grande. Máximo 1MB.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp", "image/svg+xml"].includes(file.type)) {
+      toast.error("Formato não suportado. Use JPG, PNG, WEBP ou SVG.");
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${business.id}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("business-assets")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("business-assets").getPublicUrl(path);
+      setForm((f) => ({ ...f, logo_url: data.publicUrl }));
+      setLogoPreview(data.publicUrl);
+      toast.success("Logo carregada!");
+    } catch (err: any) {
+      toast.error("Erro ao enviar logo: " + (err.message || ""));
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const removeLogo = () => {
+    setForm((f) => ({ ...f, logo_url: "" }));
+    setLogoPreview("");
   };
 
   const { data: categories = [] } = useQuery({
@@ -176,9 +220,8 @@ export function BusinessSettingsTab() {
         if (error) throw error;
         await seedAvailability(business.id);
       } else {
-        if (ownedBusinesses.length >= 1) {
-          throw new Error("Você já possui um estabelecimento cadastrado. Não é permitido criar mais de um.");
-        }
+        // Limite de unidades validado pelo trigger no banco (BD): plano Pro = 5, free/basic = 1.
+        // Se o trigger lançar erro, ele propaga aqui via err.message com a mensagem amigável.
         const { data: newBiz, error } = await supabase
           .from("businesses")
           .insert({ ...payload, owner_id: user!.id })
@@ -295,6 +338,51 @@ export function BusinessSettingsTab() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+
+          {/* Logo Upload — disponível para todos os planos */}
+          <div>
+            <Label className="mb-2 block">Logotipo do negócio</Label>
+            <div className="flex items-center gap-4">
+              {logoPreview ? (
+                <div className="relative w-24 h-24 rounded-xl overflow-hidden border bg-card">
+                  <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" />
+                  <button
+                    type="button"
+                    onClick={removeLogo}
+                    className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary"
+                >
+                  {uploadingLogo ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-6 h-6" />}
+                </button>
+              )}
+              <div className="flex-1 text-sm text-muted-foreground">
+                <p className="mb-1">Aparece no topo da página pública e nos resultados.</p>
+                <p className="text-xs">JPG, PNG, WEBP ou SVG — máx. 1MB. Ideal quadrado (512×512 px).</p>
+                {logoPreview && (
+                  <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
+                    {uploadingLogo ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <ImagePlus className="w-4 h-4 mr-1" />}
+                    Trocar logo
+                  </Button>
+                )}
+              </div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                className="hidden"
+                onChange={handleLogoUpload}
+              />
+            </div>
+          </div>
 
           {/* Banner Upload - Only for Pro/Featured businesses */}
           {(business as any)?.featured ? (

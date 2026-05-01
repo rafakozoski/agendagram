@@ -1,12 +1,33 @@
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Instagram, MessageCircle, Quote, CheckCircle2, ArrowUp } from "lucide-react";
+import { Instagram, MessageCircle, Quote, CheckCircle2, ArrowUp, MapPin, Phone, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BusinessSiteProps {
   business: any;
 }
 
+const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
 export function BusinessSite({ business }: BusinessSiteProps) {
+  // Carrega horários para a seção "Como nos visitar". Hook chamado mesmo se site não habilitado
+  // para respeitar regras de hooks; query só dispara quando site_enabled.
+  const { data: availability = [] } = useQuery({
+    queryKey: ["business-site-availability", business?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("availability")
+        .select("*")
+        .eq("business_id", business.id)
+        .eq("enabled", true)
+        .order("day_of_week");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!business?.site_enabled && !!business?.id,
+  });
+
   if (!business?.site_enabled) return null;
 
   const gallery: string[] = Array.isArray(business.site_gallery) ? business.site_gallery : [];
@@ -18,6 +39,11 @@ export function BusinessSite({ business }: BusinessSiteProps) {
   const ctaLabel = business.site_cta_label || "Agendar agora";
   const whatsapp = (business.site_whatsapp || "").replace(/\D/g, "");
   const instagram = (business.site_instagram || "").replace(/^@/, "");
+  const phoneClean = (business.phone || "").replace(/\D/g, "");
+
+  const addressParts = [business.address, business.neighborhood, business.city].filter(Boolean);
+  const fullAddress = addressParts.join(", ");
+  const mapsQuery = encodeURIComponent([business.name, ...addressParts].filter(Boolean).join(", "));
 
   const scrollToBooking = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -99,6 +125,75 @@ export function BusinessSite({ business }: BusinessSiteProps) {
                   <p className="text-sm font-semibold">— {t.name}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Como nos visitar — seção informativa para o cliente */}
+        {(fullAddress || availability.length > 0 || phoneClean || whatsapp) && (
+          <div className="max-w-5xl mx-auto mb-12">
+            <h3 className="text-xl font-bold mb-6 text-center">Como nos encontrar</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {fullAddress && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-xl border bg-background p-5 hover:border-primary hover:shadow-sm transition-all flex items-start gap-3"
+                >
+                  <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Endereço</p>
+                    <p className="text-sm text-foreground">{fullAddress}</p>
+                    <p className="text-xs text-primary mt-2 group-hover:underline">Abrir no Google Maps →</p>
+                  </div>
+                </a>
+              )}
+              {availability.length > 0 && (
+                <div className="rounded-xl border bg-background p-5 flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Horários</p>
+                    <ul className="space-y-1 text-sm">
+                      {availability.map((a: any) => (
+                        <li key={a.id} className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">{DAY_NAMES[a.day_of_week]}</span>
+                          <span className="font-medium tabular-nums">
+                            {a.start_time?.slice(0, 5)} – {a.end_time?.slice(0, 5)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+              {(phoneClean || whatsapp) && (
+                <div className="rounded-xl border bg-background p-5 flex items-start gap-3">
+                  <Phone className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Contato direto</p>
+                    <div className="space-y-2">
+                      {phoneClean && (
+                        <a href={`tel:${phoneClean}`} className="flex items-center justify-between text-sm hover:text-primary">
+                          <span className="text-muted-foreground">Telefone</span>
+                          <span className="font-medium">{business.phone}</span>
+                        </a>
+                      )}
+                      {whatsapp && (
+                        <a
+                          href={`https://wa.me/${whatsapp}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between text-sm hover:text-primary"
+                        >
+                          <span className="text-muted-foreground">WhatsApp</span>
+                          <span className="font-medium">{whatsapp}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

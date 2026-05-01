@@ -1,6 +1,4 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/logo-agendagram.png";
 
 const SEGMENTS = [
@@ -27,19 +25,6 @@ const SEGMENTS = [
 ];
 
 export function Footer() {
-  const { data: businesses = [] } = useQuery({
-    queryKey: ["footer-businesses"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("businesses")
-        .select("name, slug, city")
-        .order("featured", { ascending: false })
-        .limit(12);
-      if (error) throw error;
-      return data;
-    },
-  });
-
   return (
     <footer className="border-t mt-12 bg-secondary-foreground text-secondary">
       <div className="container mx-auto px-6 py-12">
@@ -86,24 +71,7 @@ export function Footer() {
           </div>
         </div>
 
-        {businesses.length > 0 && (
-          <div className="border-t pt-6 mb-6">
-            <h3 className="font-semibold text-sm mb-3 text-secondary">Estabelecimentos em destaque</h3>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              {businesses.map((b) => (
-                <Link
-                  key={b.slug}
-                  to={`/${b.slug}`}
-                  className="text-muted-foreground hover:text-primary"
-                >
-                  {b.name}{b.city ? ` · ${b.city}` : ""}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} Agendagram. Todos os direitos reservados.</p>
           <p>agendagram.com.br</p>
         </div>

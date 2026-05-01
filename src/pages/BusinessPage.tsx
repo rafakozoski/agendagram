@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BusinessSite } from "@/components/business/BusinessSite";
 import { Footer } from "@/components/Footer";
+import { setSeo, resetSeo, buildLocalBusinessJsonLd } from "@/lib/seo";
 
 export default function BusinessPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -68,6 +70,25 @@ export default function BusinessPage() {
     },
     enabled: !!business?.id,
   });
+
+  // SEO por business: title, description, og:image, canonical e JSON-LD LocalBusiness.
+  useEffect(() => {
+    if (!business) return;
+    const b = business as any;
+    const cityPart = b.city ? ` em ${b.city}${b.state ? `/${b.state}` : ""}` : "";
+    const title = `${b.name}${cityPart} | Agende online`;
+    const description =
+      b.description ||
+      `Agende online em ${b.name}${cityPart}. Veja serviços, profissionais e horários disponíveis.`;
+    setSeo({
+      title,
+      description,
+      ogImage: b.cover_url || b.logo_url || undefined,
+      canonical: `${window.location.origin}/${b.slug}`,
+      jsonLd: buildLocalBusinessJsonLd(b),
+    });
+    return () => resetSeo();
+  }, [business]);
 
   if (isLoading) {
     return (
@@ -153,31 +174,56 @@ export default function BusinessPage() {
             >
               <ArrowLeft className="w-4 h-4" /> Voltar
             </Link>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-primary-foreground">
-              {business.name}
-            </h1>
+            <div className="flex items-center gap-4">
+              {biz.logo_url && (
+                <img
+                  src={biz.logo_url}
+                  alt={`Logo ${business.name}`}
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-xl object-cover border-2 border-primary-foreground/20 bg-card shadow-lg"
+                />
+              )}
+              <h1 className="text-3xl md:text-4xl font-extrabold text-primary-foreground">
+                {business.name}
+              </h1>
+            </div>
           </div>
         </section>
       )}
 
-      {/* Business Info Bar */}
+      {/* Business Info Bar — clicáveis para o cliente */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
             {locationParts.length > 0 && (
-              <span className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-primary" /> {locationParts.join(" — ")}
-              </span>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  [business.name, ...locationParts, business.city].filter(Boolean).join(", "),
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+                title="Abrir no Google Maps"
+              >
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <span>{locationParts.join(" — ")}</span>
+              </a>
             )}
             {business.phone && (
-              <span className="flex items-center gap-1.5">
-                <Phone className="w-4 h-4 text-primary" /> {business.phone}
-              </span>
+              <a
+                href={`tel:${business.phone.replace(/\D/g, "")}`}
+                className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+                title="Ligar"
+              >
+                <Phone className="w-4 h-4 text-primary shrink-0" />
+                <span>{business.phone}</span>
+              </a>
             )}
             {availability.length > 0 && (
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-primary" />
-                {availability.map((a) => DAY_NAMES[a.day_of_week]).join(", ")} · {availability[0]?.start_time?.slice(0, 5)} – {availability[0]?.end_time?.slice(0, 5)}
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <Clock className="w-4 h-4 text-primary shrink-0" />
+                <span>
+                  {availability.map((a) => DAY_NAMES[a.day_of_week]).join(", ")} · {availability[0]?.start_time?.slice(0, 5)} – {availability[0]?.end_time?.slice(0, 5)}
+                </span>
               </span>
             )}
           </div>

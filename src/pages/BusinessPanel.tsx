@@ -33,14 +33,14 @@ export default function BusinessPanel() {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-6 py-10">
+      <div className="container mx-auto px-4 md:px-6 py-5 md:py-10">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 md:mb-8">
             <div>
-              <h1 className="text-3xl font-bold mb-1">
+              <h1 className="text-2xl md:text-3xl font-bold mb-1">
                 {isProfessional ? "Minha Agenda" : "Painel do Negócio"}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 {isProfessional ? "Gerencie seus agendamentos" : "Administre sua empresa, agenda, clientes e pagamentos"}
               </p>
             </div>

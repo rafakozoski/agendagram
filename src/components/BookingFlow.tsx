@@ -99,21 +99,21 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
   };
 
   return (
-    <section id="agendar" className="py-20 px-6">
+    <section id="agendar" className="py-10 md:py-20 px-4 md:px-6">
       <div className="container mx-auto max-w-3xl">
         <motion.h2
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          className="text-3xl md:text-4xl font-bold text-center mb-4"
+          className="text-2xl md:text-4xl font-bold text-center mb-3 md:mb-4"
         >
           Faça seu agendamento
         </motion.h2>
-        <p className="text-center text-muted-foreground mb-12">
+        <p className="text-center text-sm md:text-base text-muted-foreground mb-6 md:mb-12">
           Escolha o serviço, profissional, data e horário
         </p>
 
         {/* Stepper */}
-        <div className="flex items-center justify-center mb-12 gap-1">
+        <div className="flex items-center justify-center mb-6 md:mb-12 gap-1">
           {STEPS.map((label, i) => (
             <div key={label} className="flex items-center">
               <div className="flex flex-col items-center">
@@ -138,7 +138,7 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
         </div>
 
         {/* Step Content */}
-        <div className="bg-card rounded-xl border shadow-md p-6 md:p-8 min-h-[350px]">
+        <div className="bg-card rounded-xl border shadow-md p-4 md:p-8 min-h-[350px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}

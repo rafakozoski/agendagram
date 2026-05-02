@@ -6,11 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2, List, CalendarDays, Phone, MessageCircle } from "lucide-react";
+import { Calendar, CheckCircle, Clock, XCircle, Loader2, Users, Building2, List, CalendarDays, CalendarRange, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ManualBookingDialog } from "./ManualBookingDialog";
 import { WeeklyCalendarView } from "./WeeklyCalendarView";
+import { MonthCalendarView } from "./MonthCalendarView";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "secondary" },
@@ -23,7 +24,7 @@ export function BusinessBookingsTab() {
   const { business, isLoading: bizLoading, isProfessional, professionalId } = useMyBusiness();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [professionalFilter, setProfessionalFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [viewMode, setViewMode] = useState<"list" | "week" | "month">("month");
 
   const { data: professionals = [] } = useQuery({
     queryKey: ["biz-professionals-list", business?.id],
@@ -104,20 +105,28 @@ export function BusinessBookingsTab() {
             <ManualBookingDialog businessId={business.id} />
             <div className="flex border rounded-md overflow-hidden">
               <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
+                variant={viewMode === "month" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-none gap-1.5"
-                onClick={() => setViewMode("list")}
+                className="rounded-none gap-1.5 px-2.5"
+                onClick={() => setViewMode("month")}
               >
-                <List className="w-4 h-4" /> Lista
+                <CalendarRange className="w-4 h-4" /> <span className="hidden sm:inline">Mês</span>
               </Button>
               <Button
-                variant={viewMode === "calendar" ? "default" : "ghost"}
+                variant={viewMode === "week" ? "default" : "ghost"}
                 size="sm"
-                className="rounded-none gap-1.5"
-                onClick={() => setViewMode("calendar")}
+                className="rounded-none gap-1.5 px-2.5"
+                onClick={() => setViewMode("week")}
               >
-                <CalendarDays className="w-4 h-4" /> Semana
+                <CalendarDays className="w-4 h-4" /> <span className="hidden sm:inline">Semana</span>
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                className="rounded-none gap-1.5 px-2.5"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="w-4 h-4" /> <span className="hidden sm:inline">Lista</span>
               </Button>
             </div>
             {/* Professional filter - only show for owners, not professionals */}
@@ -164,8 +173,14 @@ export function BusinessBookingsTab() {
             </div>
           )}
 
-          {viewMode === "calendar" ? (
+          {viewMode === "week" ? (
             <WeeklyCalendarView
+              bookings={filtered}
+              onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
+              isProfessional={isProfessional}
+            />
+          ) : viewMode === "month" ? (
+            <MonthCalendarView
               bookings={filtered}
               onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
               isProfessional={isProfessional}

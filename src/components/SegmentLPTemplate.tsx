@@ -1,8 +1,10 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CalendarCheck, Link2, TrendingUp, Zap, ArrowRight, CheckCircle2, Star, Search, Shield, Trophy } from "lucide-react";
 import logoImg from "@/assets/logo-agendagram-bc.png";
+import { setSeo, resetSeo } from "@/lib/seo";
 
 export interface SegmentLPProps {
   nichoTitle: string; // Ex: Barbearias
@@ -15,6 +17,10 @@ export interface SegmentLPProps {
   }[];
   imageUrl: string;
   imageAlt: string;
+  /** Sobrescreve title de SEO. Se omitido, gera baseado em nichoTitle. */
+  seoTitle?: string;
+  /** Sobrescreve description de SEO. Se omitida, usa heroSubtitle. */
+  seoDescription?: string;
 }
 
 const PROOF_POINTS = [
@@ -30,8 +36,43 @@ export function SegmentLPTemplate({
   heroSubtitle,
   benefits,
   imageUrl,
-  imageAlt
+  imageAlt,
+  seoTitle,
+  seoDescription,
 }: SegmentLPProps) {
+  const location = useLocation();
+
+  // SEO por LP: title/description/canonical + JSON-LD Service
+  useEffect(() => {
+    const title = seoTitle || `Sistema de agendamento para ${nichoTitle} | Agendagram`;
+    const description = seoDescription || heroSubtitle;
+    const canonical =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${location.pathname}`
+        : `https://agendagram.com.br${location.pathname}`;
+    setSeo({
+      title,
+      description,
+      canonical,
+      ogImage: imageUrl,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        name: `Agendagram para ${nichoTitle}`,
+        description,
+        url: canonical,
+        provider: {
+          "@type": "Organization",
+          name: "Agendagram",
+          url: "https://agendagram.com.br",
+        },
+        areaServed: { "@type": "Country", name: "Brasil" },
+        category: nichoTitle,
+      },
+    });
+    return () => resetSeo();
+  }, [nichoTitle, heroSubtitle, imageUrl, location.pathname, seoTitle, seoDescription]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}

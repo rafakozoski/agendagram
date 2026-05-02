@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BookingFlow } from "@/components/BookingFlow";
-import { ArrowLeft, MapPin, Phone, Star, Clock } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Star, Clock, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -123,6 +123,26 @@ export default function BusinessPage() {
 
   const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/${biz.slug}`;
+    const shareData = {
+      title: `${biz.name} | Agendagram`,
+      text: `Agende online em ${biz.name}${biz.city ? ` - ${biz.city}` : ""}`,
+      url,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        const { toast } = await import("sonner");
+        toast.success("Link copiado!");
+      }
+    } catch {
+      // user cancelled share
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -135,12 +155,23 @@ export default function BusinessPage() {
           />
           <div className="absolute inset-0 bg-background/20" />
           <div className="absolute bottom-0 left-0 right-0 container mx-auto px-6 pb-6 z-10">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1 text-foreground/60 hover:text-foreground text-sm mb-3 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" /> Voltar
-            </Link>
+            <div className="flex items-center justify-between mb-3">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1 text-foreground/60 hover:text-foreground text-sm transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Voltar
+              </Link>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleShare}
+                className="gap-1 bg-background/80 backdrop-blur"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                Compartilhar
+              </Button>
+            </div>
             <div className="flex items-center gap-3 mb-1">
               {biz.logo_url && (
                 <img
@@ -168,12 +199,23 @@ export default function BusinessPage() {
             <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-primary blur-3xl" />
           </div>
           <div className="container mx-auto px-6 relative z-10">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1 text-primary-foreground/60 hover:text-primary-foreground text-sm mb-4 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" /> Voltar
-            </Link>
+            <div className="flex items-center justify-between mb-4">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1 text-primary-foreground/60 hover:text-primary-foreground text-sm transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Voltar
+              </Link>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleShare}
+                className="gap-1 bg-card/20 hover:bg-card/40 text-primary-foreground border-primary-foreground/30"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                Compartilhar
+              </Button>
+            </div>
             <div className="flex items-center gap-4">
               {biz.logo_url && (
                 <img

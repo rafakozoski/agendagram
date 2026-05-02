@@ -64,22 +64,22 @@ export default function Index() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="gradient-hero py-20 md:py-28 relative overflow-hidden">
+      <section className="gradient-hero py-10 md:py-28 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary blur-3xl" />
           <div className="absolute bottom-10 right-20 w-96 h-96 rounded-full bg-accent blur-3xl" />
         </div>
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="max-w-2xl mx-auto text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-extrabold text-primary-foreground mb-4 leading-tight">
+            <h1 className="text-3xl md:text-5xl font-extrabold text-primary-foreground mb-3 md:mb-4 leading-tight">
               Agende em <span className="text-accent">segundos</span>, não em minutos.
             </h1>
-            <p className="text-lg text-primary-foreground/70 mb-8">
+            <p className="text-base md:text-lg text-primary-foreground/70 mb-6 md:mb-8">
               Descubra os melhores profissionais perto de você e reserve online com o <strong>Agendagram</strong>.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
@@ -110,9 +110,9 @@ export default function Index() {
       </section>
 
       {/* Categories */}
-      <section className="py-8 border-b bg-card">
-        <div className="container mx-auto px-6">
-          <div className="flex gap-3 overflow-x-auto pb-2 justify-center flex-wrap">
+      <section className="py-4 md:py-8 border-b bg-card">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 md:justify-center flex-nowrap md:flex-wrap scrollbar-hide">
             <Button
               variant={activeCategory === null ? "default" : "outline"}
               size="sm"
@@ -143,13 +143,13 @@ export default function Index() {
 
       {/* Featured */}
       {featured.length > 0 && (
-        <section className="py-12 px-6">
+        <section className="py-6 md:py-12 px-4 md:px-6">
           <div className="container mx-auto">
-            <div className="flex items-center gap-2 mb-6">
-              <h2 className="text-2xl font-bold">Destaques</h2>
+            <div className="flex items-center gap-2 mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl font-bold">Destaques</h2>
               <Badge variant="secondary" className="ml-2">Patrocinado</Badge>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {featured.map((b) => (
                 <BusinessCard key={b.id} business={b} featured categories={categories} />
               ))}
@@ -162,21 +162,21 @@ export default function Index() {
       <BannerCarousel position="middle" />
 
       {/* Results */}
-      <section className="py-12 px-6 bg-secondary/30">
+      <section className="py-6 md:py-12 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto">
-          <h2 className="text-2xl font-bold mb-6">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
             {activeCategory
               ? `Resultados em ${categories.find((c) => c.slug === activeCategory)?.name || activeCategory}`
               : "Todos os estabelecimentos"}
           </h2>
           {isLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="h-48 animate-pulse bg-muted" />
               ))}
             </div>
           ) : regular.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {regular.map((b) => (
                 <BusinessCard key={b.id} business={b} categories={categories} />
               ))}

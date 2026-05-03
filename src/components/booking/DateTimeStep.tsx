@@ -62,13 +62,13 @@ export function DateTimeStep({ selectedDate, selectedTime, onSelectDate, onSelec
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-2 mb-4 md:mb-6">
         <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h3 className="text-lg font-semibold">Escolha data e horário</h3>
+        <h3 className="text-base md:text-lg font-semibold leading-tight">Escolha data e horário</h3>
       </div>
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         <div className="flex justify-center">
           <Calendar
             mode="single"

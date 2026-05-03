@@ -125,8 +125,8 @@ export function ConfirmationStep({ serviceId, professionalId, date, time, client
       {/* Receipt card — responsive, light gray bg, rounded */}
       <div
         ref={receiptRef}
-        className="bg-gray-100 rounded-2xl p-5 sm:p-6 text-left w-full max-w-sm mx-auto space-y-3 border border-gray-200"
-        style={{ fontFamily: "system-ui, sans-serif" }}
+        className="bg-gray-100 rounded-2xl p-4 sm:p-6 text-left w-full max-w-sm mx-auto space-y-3 border border-gray-200 overflow-hidden"
+        style={{ fontFamily: "system-ui, sans-serif", wordBreak: "break-word" }}
       >
         {/* Header with logo */}
         <div className="flex items-center justify-between mb-4">
@@ -150,10 +150,10 @@ export function ConfirmationStep({ serviceId, professionalId, date, time, client
         <hr className="border-gray-300 my-2" />
 
         {service && (
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 min-w-0">
             <Calendar className="w-4 h-4 text-primary shrink-0" />
-            <span className="font-medium truncate">{service.name}</span>
-            <span className="ml-auto font-bold text-primary whitespace-nowrap">R$ {Number(service.price).toFixed(2)}</span>
+            <span className="font-medium truncate min-w-0 flex-1">{service.name}</span>
+            <span className="font-bold text-primary whitespace-nowrap shrink-0">R$ {Number(service.price).toFixed(2)}</span>
           </div>
         )}
         {professional && (
@@ -163,9 +163,9 @@ export function ConfirmationStep({ serviceId, professionalId, date, time, client
           </div>
         )}
         {date && time && (
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
-            <Clock className="w-4 h-4 text-primary shrink-0" />
-            <span className="capitalize">{formattedDate} às {time}</span>
+          <div className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
+            <Clock className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <span className="capitalize leading-snug break-words">{formattedDate} às {time}</span>
           </div>
         )}
 

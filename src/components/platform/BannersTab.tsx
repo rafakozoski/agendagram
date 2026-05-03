@@ -13,13 +13,14 @@ import { Trash2, Plus, Image, ExternalLink, Pencil, Check, X } from "lucide-reac
 export function BannersTab() {
   const queryClient = useQueryClient();
   const [imageUrl, setImageUrl] = useState("");
+  const [mobileImageUrl, setMobileImageUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [position, setPosition] = useState("top");
   const [halfHeight, setHalfHeight] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<{ image_url: string; link_url: string; position: string; half_height: boolean }>({
-    image_url: "", link_url: "", position: "top", half_height: false,
+  const [editForm, setEditForm] = useState<{ image_url: string; mobile_image_url: string; link_url: string; position: string; half_height: boolean }>({
+    image_url: "", mobile_image_url: "", link_url: "", position: "top", half_height: false,
   });
 
   const { data: banners = [], isLoading } = useQuery({
@@ -52,11 +53,26 @@ export function BannersTab() {
     setUploading(false);
   };
 
+  const handleMobileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ext = file.name.split(".").pop();
+    const path = `banners/mobile-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("business-assets").upload(path, file);
+    if (error) {
+      toast({ title: "Erro ao enviar imagem mobile", variant: "destructive" });
+      return;
+    }
+    const { data: pub } = supabase.storage.from("business-assets").getPublicUrl(path);
+    setMobileImageUrl(pub.publicUrl);
+  };
+
   const addMutation = useMutation({
     mutationFn: async () => {
       if (!imageUrl) throw new Error("Imagem obrigatória");
       const { error } = await supabase.from("banners").insert({
         image_url: imageUrl,
+        mobile_image_url: mobileImageUrl || null,
         link_url: linkUrl,
         position,
         half_height: halfHeight,
@@ -68,6 +84,7 @@ export function BannersTab() {
       queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
       queryClient.invalidateQueries({ queryKey: ["banners"] });
       setImageUrl("");
+      setMobileImageUrl("");
       setLinkUrl("");
       setHalfHeight(false);
       toast({ title: "Banner adicionado!" });
@@ -126,10 +143,25 @@ export function BannersTab() {
     setEditForm((f) => ({ ...f, image_url: pub.publicUrl }));
   };
 
+  const handleEditMobileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ext = file.name.split(".").pop();
+    const path = `banners/mobile-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("business-assets").upload(path, file);
+    if (error) {
+      toast({ title: "Erro ao enviar imagem mobile", variant: "destructive" });
+      return;
+    }
+    const { data: pub } = supabase.storage.from("business-assets").getPublicUrl(path);
+    setEditForm((f) => ({ ...f, mobile_image_url: pub.publicUrl }));
+  };
+
   const startEdit = (b: any) => {
     setEditingId(b.id);
     setEditForm({
       image_url: b.image_url || "",
+      mobile_image_url: b.mobile_image_url || "",
       link_url: b.link_url || "",
       position: b.position || "top",
       half_height: !!b.half_height,
@@ -147,11 +179,12 @@ export function BannersTab() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Tamanho recomendado: <strong>1920×500 px</strong> (normal) ou <strong>1920×250 px</strong> (50%). Formato JPG/PNG/WebP, até 2MB.
+            Tamanho recomendado <strong>desktop</strong>: 1920×500 px (normal) ou 1920×250 px (50%).<br />
+            Tamanho recomendado <strong>mobile</strong>: 750×500 px (normal) ou 750×250 px (50%). Formato JPG/PNG/WebP, até 2MB.
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Imagem do Banner</Label>
+              <Label>Imagem Desktop</Label>
               <Input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
               <span className="text-xs text-muted-foreground">ou cole a URL da imagem:</span>
               <Input
@@ -161,6 +194,16 @@ export function BannersTab() {
               />
               {imageUrl && (
                 <img src={imageUrl} alt="Preview" className="h-24 rounded-lg object-cover w-full" />
+              )}
+              <Label className="pt-2">Imagem Mobile (opcional)</Label>
+              <Input type="file" accept="image/*" onChange={handleMobileUpload} />
+              <Input
+                placeholder="https://exemplo.com/imagem-mobile.jpg"
+                value={mobileImageUrl}
+                onChange={(e) => setMobileImageUrl(e.target.value)}
+              />
+              {mobileImageUrl && (
+                <img src={mobileImageUrl} alt="Preview mobile" className="h-24 rounded-lg object-cover w-full" />
               )}
             </div>
             <div className="space-y-4">
@@ -224,12 +267,23 @@ export function BannersTab() {
                           <img src={editForm.image_url} alt="Preview" className="h-20 w-32 object-cover rounded-md shrink-0" />
                         )}
                         <div className="flex-1 space-y-2">
+                          <Label className="text-xs">Desktop</Label>
                           <Input type="file" accept="image/*" onChange={handleEditUpload} />
                           <Input
                             placeholder="ou cole URL da imagem"
                             value={editForm.image_url}
                             onChange={(e) => setEditForm({ ...editForm, image_url: e.target.value })}
                           />
+                          <Label className="text-xs pt-1">Mobile (opcional)</Label>
+                          <Input type="file" accept="image/*" onChange={handleEditMobileUpload} />
+                          <Input
+                            placeholder="ou cole URL mobile"
+                            value={editForm.mobile_image_url}
+                            onChange={(e) => setEditForm({ ...editForm, mobile_image_url: e.target.value })}
+                          />
+                          {editForm.mobile_image_url && (
+                            <img src={editForm.mobile_image_url} alt="Preview mobile" className="h-16 w-24 object-cover rounded-md" />
+                          )}
                         </div>
                       </div>
                       <div className="grid sm:grid-cols-2 gap-3">

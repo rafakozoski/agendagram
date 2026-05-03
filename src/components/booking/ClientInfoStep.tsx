@@ -19,13 +19,13 @@ export function ClientInfoStep({ info, onChange, onSubmit, onBack, submitting }:
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-2 mb-4 md:mb-6">
         <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h3 className="text-lg font-semibold">Seus dados</h3>
+        <h3 className="text-base md:text-lg font-semibold leading-tight">Seus dados</h3>
       </div>
-      <div className="space-y-4 max-w-md mx-auto">
+      <div className="space-y-3 md:space-y-4 max-w-md mx-auto">
         {/* Visit type selector */}
         <div>
           <Label className="mb-2 block">Tipo de visita</Label>

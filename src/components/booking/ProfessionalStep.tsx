@@ -44,13 +44,13 @@ export function ProfessionalStep({ serviceId, selected, onSelect, onBack, busine
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-2 mb-4 md:mb-6">
         <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h3 className="text-lg font-semibold">Escolha o profissional</h3>
+        <h3 className="text-base md:text-lg font-semibold leading-tight">Escolha o profissional</h3>
       </div>
-      <div className="grid gap-3">
+      <div className="grid gap-2 md:gap-3">
         {professionals.length === 0 && (
           <p className="text-muted-foreground text-center py-8">Nenhum profissional disponível para este serviço.</p>
         )}
@@ -58,18 +58,18 @@ export function ProfessionalStep({ serviceId, selected, onSelect, onBack, busine
           <button
             key={pro.id}
             onClick={() => onSelect(pro.id)}
-            className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md flex items-center gap-4 ${
+            className={`w-full text-left p-3 md:p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md flex items-center gap-3 md:gap-4 ${
               selected === pro.id
                 ? "border-primary bg-primary/5 shadow-glow"
                 : "border-border hover:border-primary/40"
             }`}
           >
-            <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center">
-              <User className="w-6 h-6 text-primary-foreground" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full gradient-primary flex items-center justify-center shrink-0">
+              <User className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />
             </div>
-            <div>
-              <p className="font-semibold">{pro.name}</p>
-              <p className="text-sm text-muted-foreground">{pro.role}</p>
+            <div className="min-w-0">
+              <p className="font-semibold text-sm md:text-base leading-tight truncate">{pro.name}</p>
+              <p className="text-xs md:text-sm text-muted-foreground leading-snug truncate">{pro.role}</p>
             </div>
           </button>
         ))}

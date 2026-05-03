@@ -99,16 +99,16 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
   };
 
   return (
-    <section id="agendar" className="pt-16 pb-10 md:py-20 px-2 md:px-6">
+    <section id="agendar" className="pt-14 pb-8 md:py-20 px-2 md:px-6">
       <div className="container mx-auto max-w-3xl">
         <motion.h2
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          className="text-2xl md:text-4xl font-bold text-center mb-3 md:mb-4"
+          className="text-xl leading-tight md:text-4xl font-bold text-center mb-2 md:mb-4 px-2"
         >
           Faça seu agendamento
         </motion.h2>
-        <p className="text-center text-sm md:text-base text-muted-foreground mb-6 md:mb-12">
+        <p className="text-center text-xs leading-snug md:text-base text-muted-foreground mb-5 md:mb-12 px-2">
           Escolha o serviço, profissional, data e horário
         </p>
 
@@ -138,7 +138,7 @@ export function BookingFlow({ businessId }: { businessId?: string }) {
         </div>
 
         {/* Step Content */}
-        <div className="bg-card rounded-xl border shadow-md p-3 md:p-8 min-h-[350px]">
+        <div className="bg-card rounded-xl border shadow-md p-2.5 md:p-8 min-h-[350px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}

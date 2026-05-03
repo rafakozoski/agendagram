@@ -65,7 +65,7 @@ export function BannerCarousel({ position }: BannerCarouselProps) {
 }
 
 function BannerImage({ banner }: { banner: any }) {
-  const maxH = banner.half_height ? "max-h-32" : "max-h-64";
+  const maxH = banner.half_height ? "md:max-h-32" : "md:max-h-64";
   const mobileMaxH = banner.half_height ? "max-h-24" : "max-h-44";
   const mobileSrc = banner.mobile_image_url || banner.image_url;
   const img = (
@@ -74,7 +74,7 @@ function BannerImage({ banner }: { banner: any }) {
       <img
         src={banner.image_url}
         alt="Banner"
-        className={`w-full h-auto ${mobileMaxH} md:${maxH.replace("max-h-", "md:max-h-")} object-cover rounded-xl`}
+        className={`w-full h-auto ${mobileMaxH} ${maxH} object-cover rounded-xl`}
         loading="lazy"
       />
     </picture>

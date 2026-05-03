@@ -69,7 +69,7 @@ export default function Index() {
           <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary blur-3xl" />
           <div className="absolute bottom-10 right-20 w-96 h-96 rounded-full bg-accent blur-3xl" />
         </div>
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <div className="container mx-auto px-3 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -111,7 +111,7 @@ export default function Index() {
 
       {/* Categories */}
       <section className="py-4 md:py-8 border-b bg-card">
-        <div className="container mx-auto px-4 md:px-6">
+        <div className="container mx-auto px-2 md:px-6">
           <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 md:justify-center flex-nowrap md:flex-wrap scrollbar-hide">
             <Button
               variant={activeCategory === null ? "default" : "outline"}
@@ -143,7 +143,7 @@ export default function Index() {
 
       {/* Featured */}
       {featured.length > 0 && (
-        <section className="py-6 md:py-12 px-4 md:px-6">
+        <section className="py-6 md:py-12 px-2 md:px-6">
           <div className="container mx-auto">
             <div className="flex items-center gap-2 mb-4 md:mb-6">
               <h2 className="text-xl md:text-2xl font-bold">Destaques</h2>
@@ -162,7 +162,7 @@ export default function Index() {
       <BannerCarousel position="middle" />
 
       {/* Results */}
-      <section className="py-6 md:py-12 px-4 md:px-6 bg-secondary/30">
+      <section className="py-6 md:py-12 px-2 md:px-6 bg-secondary/30">
         <div className="container mx-auto">
           <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
             {activeCategory
@@ -218,7 +218,7 @@ function BusinessCard({ business, featured = false, categories = [] }: { busines
         ) : (
           <div className={`h-2 w-full gradient-primary`} />
         )}
-        <CardContent className="p-5">
+        <CardContent className="p-3 md:p-5">
           <div className="flex items-start justify-between mb-3">
             <div>
               <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
